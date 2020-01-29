@@ -57,11 +57,11 @@ ww_I <- 1913:1921
 
 ```{r}
 # TODO:
-data_f = readr::read_delim(paste("LIFE_TABLES/",country_code[country],".fltper_1x1.txt",sep=""), delim=" ")
-data_m = readr::read_delim(paste("LIFE_TABLES/",country_code[country],".mltper_1x1.txt",sep=""), delim=" ")
-data_b = readr::read_delim(paste("LIFE_TABLES/",country_code[country],".bltper_1x1.txt",sep=""), delim=" ")
+data_f = readr::read_delim(paste("LIFE_TABLES/",country_code[country],".fltper_1x1.txt",sep=""), skip = 2, delim=" ")
+data_m = readr::read_delim(paste("LIFE_TABLES/",country_code[country],".mltper_1x1.txt",sep=""), skip = 2, delim=" ")
+data_b = readr::read_delim(paste("LIFE_TABLES/",country_code[country],".bltper_1x1.txt",sep=""), skip = 2, delim=" ")
 
-data_b
+data_f
 
 ```
 
@@ -123,8 +123,16 @@ some columns to `numeric`, others to `double`).
 ```{r}
 retype <- function(data){
   # TODO:
-  
+  names(data) %>% 
+    stringr::str_replace_all(.," ","") -> names(data) 
+  data
 }
+retype(data_f) -> data_f
+glimpse(data_f)
+class(data_f$Age)
+
+dplyr::mutate_at(vars(-group_cols(),
+                retype)) ->data
 ```
 
 Useful tools:
@@ -136,8 +144,9 @@ Useful tools:
 ```{r}
 # TODO:
 retype(data_f) -> data_f
-retype(data_m)
-retype(data_b)
+retype(data_m) -> data_m
+retype(data_b) -> data_b
+ glimpse(data_b)
 ```
 
 # Hazard rates, mortality quotients
@@ -153,12 +162,12 @@ Pay attention to axes labels, to legends. Assess logarithmic scales.
 require(viridis)
 p<- data_f %>%
   filter(Year %in% c(1913, 1921)) %>%
-  ggplot(mapping=aes(x=mx, y=Age, colour=Year, size=pop)) +
+  ggplot(mapping=aes(x=mx, y=Age, colour=Year)) +
   geom_point() +
-  #'facet_grid(~ Year) +
   xlab("mortality quotients for women") +
   ylab("Age") +
   scale_color_viridis(discrete=TRUE)
+p
 ```
 
 Plot mortality quotients (column `mx`) for men as a function of `Age` for  years `1913` up to `1921`.
@@ -170,6 +179,7 @@ using `%+%` from `ggplot`.
 # TODO:
 p %+%
   data_m
+data_m
 ```
 
 ## Facetting
