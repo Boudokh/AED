@@ -299,6 +299,19 @@ You may use functions `pivot_wider`, `pivot_longer` from `tidyr::` package.
 ```{r}
 # TODO:
 
+conv_to_A <- function(data){
+  data %>% 
+  select(Age, mx, Year) %>% 
+  tidyr::pivot_wider(names_from = Age, values_from = mx) %>%
+  remove_rownames %>% 
+  column_to_rownames(var="Year")-> A_
+  A_
+}
+
+A_m <- conv_to_A(data_m)
+A_f <- conv_to_A(data_f)
+
+
 ```
 
 > Factorizations of $A$ play a significant role in demographic modeling. More on this topic in PCA chapter.
