@@ -235,8 +235,6 @@ big_data %>%
   scale_y_log10() +
   facet_wrap(vars(Sex)) +
   xlab("Age")+
-  
-  
   labs(colour = "Sex")
 
 ```
@@ -416,13 +414,46 @@ your computation so that it still works if the rows of `data_...` are shuffled ?
 Function `tidyr::pivot_longer` may help.
 
 ```{r}
+
+re <- data_f %>% 
+  filter(as.numeric(Age) > 60) %>%
+  full_rex() %>%
+  data.frame()
+
+names(re) <- levels(data_f$Age)[61:length(levels(data_f$Age))]
+
+re %>% 
+  rownames_to_column(var = "Year") -> re
+
+re %>%
+  pivot_longer(-Year, names_to = "Age", values_to = "rex") %>%
+  filter( Age %in% ages) %>%
+  ggplot(mapping = aes(x = Year, y = rex)) + 
+  geom_point(aes(colour = Age)) + 
+  scale_y_log10() +
+  scale_x_discrete(breaks = re$Year[seq(5,202, by = 50)]) +
+  facet_wrap(~ Age)
+
+
+
+
+```
+
+
+
+```{r}
 # TODO:
 ages <- c(60, 65)
 
-e_f <- data.frame(E_f)
+e_f <- E_f %>% 
+  data.frame() 
 
-names(e_f) <- colnames(E_f) 
-e_f$Year <-rownames(E_f)
+names(e_f) <- colnames(E_f)
+
+e_f %>% 
+  rownames_to_column(var = "Year") -> e_f
+
+
 
 e_f %>%
   pivot_longer(-Year, names_to = "Age", values_to = "rex") %>%
@@ -430,7 +461,8 @@ e_f %>%
   ggplot(mapping = aes(x = Year, y = rex)) + 
   geom_point(aes(colour = Age)) + 
   scale_y_log10() +
-  scale_x_discrete(breaks = e_f$Year[seq(1,202, by = 20)]) 
+  scale_x_discrete(breaks = e_f$Year[seq(5,202, by = 50)]) +
+  facet_wrap(~ Age)
   
   
   
