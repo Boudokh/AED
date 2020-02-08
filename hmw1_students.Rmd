@@ -278,6 +278,7 @@ mort_by_age <- big_data %>%
   filter(Age %in% ages) %>%
   ggplot(mapping=aes(x=Year, y=mx)) +
   geom_point(aes(colour = Sex) , size = 1) +
+  scale_y_log10() +
   facet_wrap(vars(Age))  
 mort_by_age
 
@@ -315,7 +316,8 @@ years <- seq(1825, 2000, by = 25)
 # TODO:
 
 p %+%
-  filter(big_data, Year %in% years)
+  filter(big_data, Year %in% years) +
+  facet_wrap(vars(Sex))
 
 #logartithmic
 ```
@@ -381,8 +383,27 @@ and columns to `Age` with $E_{t,x}$ equal to the residual life expectancy at age
 # TODO:
 full_rex <- function(lt)
 {
+  retype(lt) -> lt
+  conv_to_A(lt) -> A
   
+  E <- matrix(0L, nrow = dim(A)[1], ncol = dim(A)[2])
+  colnames(E) <- colnames(A)
+  rownames(E) <- rownames(A)
+  
+  for (i in 1:nrow(A))
+    {
+    for(age in 0:ncol(A)-1)
+      {
+        E[i, age+1] <- rex(A[i,], age)
+      }
+    }
+  E
 }
+
+data_f2 = readr::read_delim(paste("LIFE_TABLES/",country_code[country],".fltper_1x1.txt",sep=""), delim=" ", skip = 2)
+
+full_rex(data_f2)->E_f
+
 ```
 
 Plot residual life expectancy as a function of `Year` at ages $60$ and $65$.
@@ -396,6 +417,24 @@ Function `tidyr::pivot_longer` may help.
 
 ```{r}
 # TODO:
+ages <- c(60, 65)
+
+e_f <- data.frame(E_f)
+
+names(e_f) <- colnames(E_f) 
+e_f$Year <-rownames(E_f)
+
+e_f %>%
+  pivot_longer(-Year, names_to = "Age", values_to = "rex") %>%
+  filter( Age %in% ages) %>%
+  ggplot(mapping = aes(x = Year, y = rex)) + 
+  geom_point(aes(colour = Age)) + 
+  scale_y_log10() +
+  scale_x_discrete(breaks = e_f$Year[seq(1,202, by = 20)]) 
+  
+  
+  
+
 ```
 
 # References
