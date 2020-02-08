@@ -23,6 +23,7 @@ If you install and load package [https://cran.r-project.org/web/packages/demogra
 ```{r}
 pacman::p_load(tidyverse)
 pacman::p_load(tidymodels)
+pacman::p_load(dplyr)
 ```
 
 ## Life table inspection
@@ -96,7 +97,6 @@ v=c()
 for (i in 1:ncol(data_b)){
   v=c(v,(is.na(data_b[,i])))
 }
-v
 
 ```
 
@@ -119,14 +119,16 @@ some columns to `numeric`, others to `double`).
 retype <- function(data){
   names(data) %>%
   stringr::str_replace_all(., ' ', '') -> names(data)
+  stringr::str_replace_all(data$Age, ' ','') -> data$Age
+
   data %>%
     dplyr::mutate_at(vars(mx, qx, ax, ex), as.double) %>%
     dplyr::mutate_at(vars(Year, lx, dx, Lx, Tx), as.integer) %>%
-    dplyr::mutate_at(vars(Age), as.factor) -> data
+    dplyr::mutate_at(vars(Age), forcats::as_factor) -> data
   data
 }
 
-glimpse(data_f)
+
 ```
 
 Useful tools:
@@ -148,7 +150,9 @@ retype(data_f) -> data_f
 retype(data_m) -> data_m
 retype(data_b) -> data_b
 
-count_na(data_f)
+glimpse(data_f)
+
+#count_na(data_f)
 
 ```
 
@@ -167,8 +171,8 @@ p <- data_f %>%
   filter(Year %in% ww_I) %>%
   ggplot(mapping=aes(x=Age, y=mx)) +
   geom_point(aes(colour = forcats::as_factor(Year)), size = .5) +
-  scale_x_discrete(breaks = data_f$Age[c(TRUE,FALSE,FALSE)]) +
-  #facet_grid(~ Year) +
+  scale_x_discrete(breaks = data_f$Age[seq(1,111, by = 10)]) +
+  scale_y_log10() +
   xlab("Age")+
   ylab("mortality quotients for women") +
   labs(colour = "Years")
@@ -214,15 +218,25 @@ Plot mortality quotients (column `mx`) as a function of `Age` for
 years `1913` up to `1921` facet according to `Sex`.
 
 ```{r}
+p %+%
+  filter(big_data, Year %in% ww_I) + 
+  facet_wrap(vars(Sex)) +
+  ylab("mortality quotients") 
+
+```
+
+```{r}
 # TODO:
 big_data %>%
   filter(Year %in% ww_I) %>%
   ggplot(mapping=aes(x=Age, y=mx)) +
-  geom_point(aes(colour = Sex), shape = '+', size = 2) +
-  scale_x_discrete(breaks = big_data$Age[c(TRUE, FALSE, FALSE)]) +
-  #facet_grid(~ Year) +
+  geom_point(aes(colour = Year), shape = '+', size = 2) +
+  scale_x_discrete(breaks = big_data$Age[seq(1,111, by = 10)]) +
+  scale_y_log10() +
+  facet_wrap(vars(Sex)) +
   xlab("Age")+
-  ylab("mortality quotients") +
+  
+  
   labs(colour = "Sex")
 
 ```
@@ -231,13 +245,29 @@ Map `Sex` to some aesthetics and facet by `Year`.
 
 ```{r}
 # TODO:
+
+big_data %>%
+  filter(Year %in% ww_I) %>%
+  ggplot(mapping=aes(x=Age, y=mx)) +
+  facet_wrap(vars(Year)) + 
+  geom_point(aes(colour = Sex), shape = '+', size = 2)+
+  scale_x_discrete(breaks = big_data$Age[seq(1,111, by = 20)]) +
+  scale_y_log10() +
+  xlab("Age")+
+  ylab("mortality quotients") 
+
 ```
 
 List puzzling features on those plots.
 : TODO:
 
 Do you have clues about those puzzling aspects?
-: TODO:# Trends## Infant mortality ratePlot mortality quotients at ages $0, 1, 5$ as a function of time.
+: TODO:
+
+
+# Trends
+
+## Infant mortality ratePlot mortality quotients at ages $0, 1, 5$ as a function of time.
 Distinguish women and men.
 
 ```{r}
@@ -245,9 +275,11 @@ ages <- c(0, 1, 5)
 # TODO:
 ages
 mort_by_age <- big_data %>%
-  filter(Year %in% ww_I, as.numeric(levels(Age)) %in% ages) %>%
+  filter(Age %in% ages) %>%
   ggplot(mapping=aes(x=Year, y=mx)) +
-  geom_point(aes(colour = Sex, shape = Age) , size = 2)
+  geom_point(aes(colour = Sex) , size = 1) +
+  scale_y_log10() +
+  facet_wrap(vars(Age))  
 mort_by_age
 
 ```
@@ -267,7 +299,7 @@ ages <- c(15, 20, 40, 60)
 
 # TODO:
 mort_by_age %+%
-    filter(big_data, Year %in% ww_I, as.numeric(levels(Age)) %in% ages)
+  filter(big_data, Age %in% ages) 
 ```
 
 TODO:
@@ -284,7 +316,8 @@ years <- seq(1825, 2000, by = 25)
 # TODO:
 
 p %+%
-  filter(big_data, Year %in% years)
+  filter(big_data, Year %in% years) +
+  facet_wrap(vars(Sex))
 
 #logartithmic
 ```
@@ -301,11 +334,11 @@ You may use functions `pivot_wider`, `pivot_longer` from `tidyr::` package.
 
 conv_to_A <- function(data){
   data %>% 
-  select(Age, mx, Year) %>% 
-  tidyr::pivot_wider(names_from = Age, values_from = mx) %>%
-  remove_rownames %>% 
-  column_to_rownames(var="Year")-> A_
-  A_
+    select(Age, mx, Year) %>% 
+    tidyr::pivot_wider(names_from = Age, values_from = mx) %>%
+    remove_rownames %>% 
+    column_to_rownames(var="Year") -> A_
+    data.matrix(A_)
 }
 
 A_m <- conv_to_A(data_m)
@@ -322,11 +355,22 @@ Write a function that takes as input a vector of mortality quotients, as well as
 
 ```{r}
 # TODO:
+
+mx <- A_f["2017",]
+exp_a = 0
+age =1
+mort = 1
+for (i in age:length(mx)){
+  exp_a = exp_a + i*mort*mx[i]
+  mort = mort*(1-mx[i])
+}
+
+exp_a
 ```
 
 ```{r}
 rex <- function(mx, age){
-  # TODO:
+  sum(cumprod(1-tail(mx, length(mx)-age)))  
 }
 
 ```
@@ -339,8 +383,27 @@ and columns to `Age` with $E_{t,x}$ equal to the residual life expectancy at age
 # TODO:
 full_rex <- function(lt)
 {
-  # TODO:
+  retype(lt) -> lt
+  conv_to_A(lt) -> A
+  
+  E <- matrix(0L, nrow = dim(A)[1], ncol = dim(A)[2])
+  colnames(E) <- colnames(A)
+  rownames(E) <- rownames(A)
+  
+  for (i in 1:nrow(A))
+    {
+    for(age in 0:ncol(A)-1)
+      {
+        E[i, age+1] <- rex(A[i,], age)
+      }
+    }
+  E
 }
+
+data_f2 = readr::read_delim(paste("LIFE_TABLES/",country_code[country],".fltper_1x1.txt",sep=""), delim=" ", skip = 2)
+
+full_rex(data_f2)->E_f
+
 ```
 
 Plot residual life expectancy as a function of `Year` at ages $60$ and $65$.
@@ -354,6 +417,24 @@ Function `tidyr::pivot_longer` may help.
 
 ```{r}
 # TODO:
+ages <- c(60, 65)
+
+e_f <- data.frame(E_f)
+
+names(e_f) <- colnames(E_f) 
+e_f$Year <-rownames(E_f)
+
+e_f %>%
+  pivot_longer(-Year, names_to = "Age", values_to = "rex") %>%
+  filter( Age %in% ages) %>%
+  ggplot(mapping = aes(x = Year, y = rex)) + 
+  geom_point(aes(colour = Age)) + 
+  scale_y_log10() +
+  scale_x_discrete(breaks = e_f$Year[seq(1,202, by = 20)]) 
+  
+  
+  
+
 ```
 
 # References
