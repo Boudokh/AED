@@ -252,7 +252,7 @@ big_data %>%
 List puzzling features on those plots.
 : TODO:
 From 1914 to 1919 we observed a surge in mortality for males aged between 20 and 50 years compared to females.
-Also in 1918 and in a leasser extent 1919 there was a rise in female mortality rates.
+Also in 1918 and in a lesser extent 1919 there was a rise in female mortality rates.
 
 Do you have clues about those puzzling aspects?
 : TODO:
