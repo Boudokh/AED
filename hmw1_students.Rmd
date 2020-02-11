@@ -1,7 +1,7 @@
 ---
 title: "Homework I: Life Tables"
 subtitle: "Cours: Analyse de Données M1 Mathématiques/M1 Mathématiques-Informatique"
-author: "Inès Dardouri et Mohamed Boudokhane"
+author: "Inès Dardouri , Lycia Fezzoua et Mohamed Boudokhane"
 output:
   html_notebook:
     code_folding: none
@@ -102,6 +102,10 @@ for (i in 1:ncol(data_b)){
 
 Which columns needs retyping?
 : TODO:
+we retyped all the columns:
+ - Year, lx, dx, Lx, Tx as integrs,
+ - mx, qx, ax, ex as doubles
+ - Age as factor because it contained the value '110+' which couldn't convert as a numeric.
 
 ## Life table cleaning
 
@@ -175,7 +179,7 @@ p <- data_f %>%
   scale_y_log10() +
   xlab("Age")+
   ylab("mortality quotients for women") +
-  labs(colour = "Years")
+  labs(colour = "Years") 
 
 print(p)
 ```
@@ -188,7 +192,8 @@ using `%+%` from `ggplot`.
 ```{r}
 # TODO:
 p %+%
-  filter(data_m, Year %in% ww_I)
+  filter(data_m, Year %in% ww_I) +
+  ylab("mortality quotients for men") 
 ```
 
 ## Facetting
@@ -218,6 +223,7 @@ Plot mortality quotients (column `mx`) as a function of `Age` for
 years `1913` up to `1921` facet according to `Sex`.
 
 ```{r}
+# TODO:
 p %+%
   filter(big_data, Year %in% ww_I) + 
   facet_wrap(vars(Sex)) +
@@ -225,19 +231,6 @@ p %+%
 
 ```
 
-```{r}
-# TODO:
-big_data %>%
-  filter(Year %in% ww_I) %>%
-  ggplot(mapping=aes(x=Age, y=mx)) +
-  geom_point(aes(colour = Year), shape = '+', size = 2) +
-  scale_x_discrete(breaks = big_data$Age[seq(1,111, by = 10)]) +
-  scale_y_log10() +
-  facet_wrap(vars(Sex)) +
-  xlab("Age")+
-  labs(colour = "Sex")
-
-```
 
 Map `Sex` to some aesthetics and facet by `Year`.
 
@@ -258,10 +251,13 @@ big_data %>%
 
 List puzzling features on those plots.
 : TODO:
+From 1914 to 1919 we observed a jump in mortality for male aged between 20 and 50 years compared to females.
+also in 1918 and a leasser extent 1919 there was a rise in female mortality rates.
 
 Do you have clues about those puzzling aspects?
 : TODO:
 
+The First world war can explain the rise in mortality rates and to a lesser extent the spanish flu in 1918/1919.
 
 # Trends
 
@@ -272,18 +268,22 @@ Distinguish women and men.
 ages <- c(0, 1, 5)
 # TODO:
 ages
-mort_by_age <- big_data %>%
+mx_by_age <- big_data %>%
   filter(Age %in% ages) %>%
   ggplot(mapping=aes(x=Year, y=mx)) +
   geom_point(aes(colour = Sex) , size = 1) +
   scale_y_log10() +
-  facet_wrap(vars(Age))  
-mort_by_age
+  facet_wrap(vars(Age))  +
+  ylab("mortality quotients") 
+
+mx_by_age
 
 ```
 
 Can you match abrupt changes and historical events?
 : TODO:
+
+we can assicate the drop in infant mortality rates to the advances of modern medicine (e.g. : vaccination)
 
 ## As times goes byPlot mortality quotients at ages $15, 20, 40, 60$ as a function of time
 
@@ -296,12 +296,15 @@ using `%+%` from `ggplot`.
 ages <- c(15, 20, 40, 60)
 
 # TODO:
-mort_by_age %+%
+mx_by_age %+%
   filter(big_data, Age %in% ages) 
 ```
 
 TODO:
 : List puzzling features
+
+we can see abrupt rises in mortality corresponding to major wars in france : 1870, 1914-1918, 1940s specifically 20 and 40 year-old males.
+
 
 ## Mortality quotients
 
@@ -351,22 +354,9 @@ A_f <- conv_to_A(data_f)
 
 Write a function that takes as input a vector of mortality quotients, as well as an age, and returns the residual life expectancy corresponding to the vector and the given age.
 
+
 ```{r}
 # TODO:
-
-mx <- A_f["2017",]
-exp_a = 0
-age =1
-mort = 1
-for (i in age:length(mx)){
-  exp_a = exp_a + i*mort*mx[i]
-  mort = mort*(1-mx[i])
-}
-
-exp_a
-```
-
-```{r}
 rex <- function(mx, age){
   sum(cumprod(1-tail(mx, length(mx)-age)))  
 }
@@ -402,6 +392,8 @@ data_f2 = readr::read_delim(paste("LIFE_TABLES/",country_code[country],".fltper_
 
 full_rex(data_f2)->E_f
 
+glimpse(E_f)
+
 ```
 
 Plot residual life expectancy as a function of `Year` at ages $60$ and $65$.
@@ -414,6 +406,8 @@ your computation so that it still works if the rows of `data_...` are shuffled ?
 Function `tidyr::pivot_longer` may help.
 
 ```{r}
+# TODO:
+ages <- c(60, 65)
 
 re <- data_f %>% 
   filter(as.numeric(Age) > 60) %>%
@@ -427,7 +421,7 @@ re %>%
 
 re %>%
   pivot_longer(-Year, names_to = "Age", values_to = "rex") %>%
-  filter( Age %in% ages) %>%
+  filter(Age %in% ages) %>%
   ggplot(mapping = aes(x = Year, y = rex)) + 
   geom_point(aes(colour = Age)) + 
   scale_y_log10() +
@@ -439,35 +433,6 @@ re %>%
 
 ```
 
-
-
-```{r}
-# TODO:
-ages <- c(60, 65)
-
-e_f <- E_f %>% 
-  data.frame() 
-
-names(e_f) <- colnames(E_f)
-
-e_f %>% 
-  rownames_to_column(var = "Year") -> e_f
-
-
-
-e_f %>%
-  pivot_longer(-Year, names_to = "Age", values_to = "rex") %>%
-  filter( Age %in% ages) %>%
-  ggplot(mapping = aes(x = Year, y = rex)) + 
-  geom_point(aes(colour = Age)) + 
-  scale_y_log10() +
-  scale_x_discrete(breaks = e_f$Year[seq(5,202, by = 50)]) +
-  facet_wrap(~ Age)
-  
-  
-  
-
-```
 
 # References
 
