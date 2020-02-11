@@ -251,8 +251,8 @@ big_data %>%
 
 List puzzling features on those plots.
 : TODO:
-From 1914 to 1919 we observed a jump in mortality for male aged between 20 and 50 years compared to females.
-also in 1918 and a leasser extent 1919 there was a rise in female mortality rates.
+From 1914 to 1919 we observed a surge in mortality for males aged between 20 and 50 years compared to females.
+Also in 1918 and in a leasser extent 1919 there was a rise in female mortality rates.
 
 Do you have clues about those puzzling aspects?
 : TODO:
@@ -283,7 +283,7 @@ mx_by_age
 Can you match abrupt changes and historical events?
 : TODO:
 
-we can assicate the drop in infant mortality rates to the advances of modern medicine (e.g. : vaccination)
+we can associate the drop in infant mortality rates to the advances of modern medicine (e.g. : vaccination)
 
 ## As times goes byPlot mortality quotients at ages $15, 20, 40, 60$ as a function of time
 
@@ -320,7 +320,6 @@ p %+%
   filter(big_data, Year %in% years) +
   facet_wrap(vars(Sex))
 
-#logartithmic
 ```
 
 # Rearrangement
@@ -424,12 +423,8 @@ re %>%
   filter(Age %in% ages) %>%
   ggplot(mapping = aes(x = Year, y = rex)) + 
   geom_point(aes(colour = Age)) + 
-  scale_y_log10() +
   scale_x_discrete(breaks = re$Year[seq(5,202, by = 50)]) +
   facet_wrap(~ Age)
-
-
-
 
 ```
 
