@@ -143,13 +143,7 @@ Comment the output of `summary(.)`
 ```{r}
 # TODO
 summary(lm.0)
-<<<<<<< HEAD
 
-=======
-#I comment : it's weird ?
-# Nguyen comment : idk
-#Boucheron's comment : 
->>>>>>> 8e3e3e51d6b071ade67eb0d05e42c06083a6d9b6
 ```
 
 - Provide an interpretation of each $t$ value 
@@ -262,20 +256,16 @@ anova(lms[[1]], lms[[2]])
 
 ```{r}
 # TODO:
-<<<<<<< HEAD
 for (i in 1:9){
   print(anova(lms[[i]], lms[[i+1]]))
 }
   
-=======
->>>>>>> 8e3e3e51d6b071ade67eb0d05e42c06083a6d9b6
 ```
 
 Use function `aov()`,  comment result and summary.
 
 ```{r}
 # TODO:
-<<<<<<< HEAD
 df2.aov <- aov(formula = Y ~ x1, data = df2)
 
 summary(df2.aov)
@@ -285,35 +275,22 @@ summary(df2.aov)
 # expliqué ça au td6
 
 #♠une fois qu'on sait ça, on peut faire le reste avec <3
-=======
-# df2.aov <- aov(formula = ., data = df2)
-
-# df2.aov
->>>>>>> 8e3e3e51d6b071ade67eb0d05e42c06083a6d9b6
 ```
 
 Update `df2.aov` using function `update`. Drop `x5, x6, x7, x8, x9`
 
 ```{r}
-<<<<<<< HEAD
 # TODO: 
 update(df2.aov, Y ~ix - x5 - x6 - x7 - x8 - x9)
-=======
-# TODO: update(df2.aov, . ~ . - x5 - x6 - x7 - x8 - x9)
->>>>>>> 8e3e3e51d6b071ade67eb0d05e42c06083a6d9b6
 ```
 
 Use function `dropterm` on full model with option `test = "F"` and without. 
 Interpret in both cases. 
 
 ```{r}
-<<<<<<< HEAD
 # TODO: 
 dropterm(df2.aov, scale = 0, test = "F")
 dropterm(df2.aov, scale = 0,k=2)
-=======
-# TODO: dropterm(df2.aov, ...)
->>>>>>> 8e3e3e51d6b071ade67eb0d05e42c06083a6d9b6
 ```
 
 ## Using `addterm` between minimal and full model
@@ -321,14 +298,11 @@ dropterm(df2.aov, scale = 0,k=2)
 
 ```{r}
 # TODO:
-<<<<<<< HEAD
 addterm(df2, upper = ~ ., comp = 1:9,
         aic = TRUE)
 
 dropterm(object, lower = ~ 1, comp = 1:9,
          aic = TRUE, bestmodel = .)
-=======
->>>>>>> 8e3e3e51d6b071ade67eb0d05e42c06083a6d9b6
 ```
 
 ## Using `stepAIC()`
@@ -341,11 +315,7 @@ Comment.
 ```{r}
 # TODO
 
-<<<<<<< HEAD
 stepAIC(df2.lo, scope = list(upper=formulas[[10]], lower=formulas[[1]]))
-=======
-
->>>>>>> 8e3e3e51d6b071ade67eb0d05e42c06083a6d9b6
 
 ```
 
