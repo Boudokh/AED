@@ -9,7 +9,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Inès Dardouri et Mohamed Boudokhane" />
+<meta name="author" content="Inès Dardouri , Lycia Fezzoua et Mohamed Boudokhane" />
 
 
 <title>Homework I: Life Tables</title>
@@ -1743,7 +1743,7 @@ summary {
 
 <h1 class="title toc-ignore">Homework I: Life Tables</h1>
 <h3 class="subtitle">Cours: Analyse de Données M1 Mathématiques/M1 Mathématiques-Informatique</h3>
-<h4 class="author">Inès Dardouri et Mohamed Boudokhane</h4>
+<h4 class="author">Inès Dardouri , Lycia Fezzoua et Mohamed Boudokhane</h4>
 
 </div>
 
@@ -1755,12 +1755,15 @@ summary {
 </ul></li>
 <li><a href="#hazard-rates-mortality-quotients"><span class="toc-section-number">2</span> Hazard rates, mortality quotients</a><ul>
 <li><a href="#facetting"><span class="toc-section-number">2.1</span> Facetting</a></li>
-<li><a href="#as-times-goes-byplot-mortality-quotients-at-ages-15-20-40-60-as-a-function-of-time"><span class="toc-section-number">2.2</span> As times goes byPlot mortality quotients at ages <span class="math inline">\(15, 20, 40, 60\)</span> as a function of time</a></li>
-<li><a href="#mortality-quotients"><span class="toc-section-number">2.3</span> Mortality quotients</a></li>
 </ul></li>
-<li><a href="#rearrangement"><span class="toc-section-number">3</span> Rearrangement</a></li>
-<li><a href="#life-expectancy"><span class="toc-section-number">4</span> Life expectancy</a></li>
-<li><a href="#references"><span class="toc-section-number">5</span> References</a></li>
+<li><a href="#trends"><span class="toc-section-number">3</span> Trends</a><ul>
+<li><a href="#infant-mortality-rateplot-mortality-quotients-at-ages-0-1-5-as-a-function-of-time."><span class="toc-section-number">3.1</span> Infant mortality ratePlot mortality quotients at ages <span class="math inline">\(0, 1, 5\)</span> as a function of time.</a></li>
+<li><a href="#as-times-goes-byplot-mortality-quotients-at-ages-15-20-40-60-as-a-function-of-time"><span class="toc-section-number">3.2</span> As times goes byPlot mortality quotients at ages <span class="math inline">\(15, 20, 40, 60\)</span> as a function of time</a></li>
+<li><a href="#mortality-quotients"><span class="toc-section-number">3.3</span> Mortality quotients</a></li>
+</ul></li>
+<li><a href="#rearrangement"><span class="toc-section-number">4</span> Rearrangement</a></li>
+<li><a href="#life-expectancy"><span class="toc-section-number">5</span> Life expectancy</a></li>
+<li><a href="#references"><span class="toc-section-number">6</span> References</a></li>
 </ul>
 </div>
 
@@ -1776,10 +1779,10 @@ summary {
 <p>If you install and load package <a href="https://cran.r-project.org/web/packages/demography/index.html">https://cran.r-project.org/web/packages/demography/index.html</a>, you will also find life data tables.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucGFjbWFuOjpwX2xvYWQodGlkeXZlcnNlKVxucGFjbWFuOjpwX2xvYWQodGlkeW1vZGVscylcbnBhY21hbjo6cF9sb2FkKHJlc2hhcGUyKVxuYGBgIn0= -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucGFjbWFuOjpwX2xvYWQodGlkeXZlcnNlKVxucGFjbWFuOjpwX2xvYWQodGlkeW1vZGVscylcbnBhY21hbjo6cF9sb2FkKGRwbHlyKVxuYGBgIn0= -->
 <pre class="r"><code>pacman::p_load(tidyverse)
 pacman::p_load(tidymodels)
-pacman::p_load(reshape2)</code></pre>
+pacman::p_load(dplyr)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -1851,7 +1854,7 @@ data_b = readr::read_delim(paste(&quot;LIFE_TABLES/&quot;,country_code[country],
 </ul>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBUT0RPOlxuI2NsYXNzKGRhdGFfYilcbmdsaW1wc2UoZGF0YV9mKVxuXG52PWMoKVxuZm9yIChpIGluIDE6bmNvbChkYXRhX2IpKXtcbiAgdj1jKHYsKGlzLm5hKGRhdGFfYlssaV0pKSlcbn1cbnZcblxuYGBgIn0= -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBUT0RPOlxuI2NsYXNzKGRhdGFfYilcbmdsaW1wc2UoZGF0YV9mKVxuXG52PWMoKVxuZm9yIChpIGluIDE6bmNvbChkYXRhX2IpKXtcbiAgdj1jKHYsKGlzLm5hKGRhdGFfYlssaV0pKSlcbn1cblxuYGBgIn0= -->
 <pre class="r"><code># TODO:
 #class(data_b)
 glimpse(data_f)
@@ -1860,14 +1863,13 @@ v=c()
 for (i in 1:ncol(data_b)){
   v=c(v,(is.na(data_b[,i])))
 }
-v
 </code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <dl>
 <dt>Which columns needs retyping?</dt>
-<dd>TODO:
+<dd>TODO: we retyped all the columns: - Year, lx, dx, Lx, Tx as integrs, - mx, qx, ax, ex as doubles - Age as factor because it contained the value ‘110+’ which couldn’t convert as a numeric.
 </dd>
 </dl>
 </div>
@@ -1877,18 +1879,19 @@ v
 <p>You may use fonctional programming (using <code>purrr::</code> or <code>plyr::</code>) to process all column names of <code>data_xxx</code> using one expression. Some verbs in <code>dplyr::</code> provide you with shortcuts.Write a function <code>retype</code> that can tidy data.frames with the same schema as <code>data_xxx</code> (cleaning column names if necessary, casting some columns to <code>numeric</code>, others to <code>double</code>).</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucmV0eXBlIDwtIGZ1bmN0aW9uKGRhdGEpe1xuICBuYW1lcyhkYXRhKSAlPiVcbiAgc3RyaW5ncjo6c3RyX3JlcGxhY2VfYWxsKC4sICcgJywgJycpIC0+IG5hbWVzKGRhdGEpXG4gIGRhdGEgJT4lXG4gICAgZHBseXI6Om11dGF0ZV9hdCh2YXJzKG14LCBxeCwgYXgsIGV4KSwgYXMuZG91YmxlKSAlPiVcbiAgICBkcGx5cjo6bXV0YXRlX2F0KHZhcnMoWWVhciwgbHgsIGR4LCBMeCwgVHgpLCBhcy5pbnRlZ2VyKSAlPiVcbiAgICBkcGx5cjo6bXV0YXRlX2F0KHZhcnMoQWdlKSwgYXMuZmFjdG9yKSAtPiBkYXRhXG4gIGRhdGFcbn1cblxuZ2xpbXBzZShkYXRhX2YpXG5gYGAifQ== -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucmV0eXBlIDwtIGZ1bmN0aW9uKGRhdGEpe1xuICBuYW1lcyhkYXRhKSAlPiVcbiAgc3RyaW5ncjo6c3RyX3JlcGxhY2VfYWxsKC4sICcgJywgJycpIC0+IG5hbWVzKGRhdGEpXG4gIHN0cmluZ3I6OnN0cl9yZXBsYWNlX2FsbChkYXRhJEFnZSwgJyAnLCcnKSAtPiBkYXRhJEFnZVxuXG4gIGRhdGEgJT4lXG4gICAgZHBseXI6Om11dGF0ZV9hdCh2YXJzKG14LCBxeCwgYXgsIGV4KSwgYXMuZG91YmxlKSAlPiVcbiAgICBkcGx5cjo6bXV0YXRlX2F0KHZhcnMoWWVhciwgbHgsIGR4LCBMeCwgVHgpLCBhcy5pbnRlZ2VyKSAlPiVcbiAgICBkcGx5cjo6bXV0YXRlX2F0KHZhcnMoQWdlKSwgZm9yY2F0czo6YXNfZmFjdG9yKSAtPiBkYXRhXG4gIGRhdGFcbn1cblxuXG5gYGAifQ== -->
 <pre class="r"><code>retype &lt;- function(data){
   names(data) %&gt;%
   stringr::str_replace_all(., &#39; &#39;, &#39;&#39;) -&gt; names(data)
+  stringr::str_replace_all(data$Age, &#39; &#39;,&#39;&#39;) -&gt; data$Age
+
   data %&gt;%
     dplyr::mutate_at(vars(mx, qx, ax, ex), as.double) %&gt;%
     dplyr::mutate_at(vars(Year, lx, dx, Lx, Tx), as.integer) %&gt;%
-    dplyr::mutate_at(vars(Age), as.factor) -&gt; data
+    dplyr::mutate_at(vars(Age), forcats::as_factor) -&gt; data
   data
 }
-
-glimpse(data_f)</code></pre>
+</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -1900,7 +1903,7 @@ glimpse(data_f)</code></pre>
 </ul>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBUT0RPOlxuXG5jb3VudF9uYSA8LSBmdW5jdGlvbihkYXRhKXtcbiAgZGF0YSAlPiVcbiAgICBkcGx5cjo6c3VtbWFyaXNlX2FsbCguZnVucyA9IH5zdW0oaXMubmEoLikpKS0+IHJlc1xuICByZXNcbn1cblxucmV0eXBlKGRhdGFfZikgLT4gZGF0YV9mXG5yZXR5cGUoZGF0YV9tKSAtPiBkYXRhX21cbnJldHlwZShkYXRhX2IpIC0+IGRhdGFfYlxuXG5jb3VudF9uYShkYXRhX2YpXG5cbmBgYCJ9 -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBUT0RPOlxuXG5jb3VudF9uYSA8LSBmdW5jdGlvbihkYXRhKXtcbiAgZGF0YSAlPiVcbiAgICBkcGx5cjo6c3VtbWFyaXNlX2FsbCguZnVucyA9IH5zdW0oaXMubmEoLikpKS0+IHJlc1xuICByZXNcbn1cblxucmV0eXBlKGRhdGFfZikgLT4gZGF0YV9mXG5yZXR5cGUoZGF0YV9tKSAtPiBkYXRhX21cbnJldHlwZShkYXRhX2IpIC0+IGRhdGFfYlxuXG5nbGltcHNlKGRhdGFfZilcblxuI2NvdW50X25hKGRhdGFfZilcblxuYGBgIn0= -->
 <pre class="r"><code># TODO:
 
 count_na &lt;- function(data){
@@ -1913,7 +1916,9 @@ retype(data_f) -&gt; data_f
 retype(data_m) -&gt; data_m
 retype(data_b) -&gt; data_b
 
-count_na(data_f)
+glimpse(data_f)
+
+#count_na(data_f)
 </code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
@@ -1926,18 +1931,18 @@ count_na(data_f)
 <p>Pay attention to axes labels, to legends. Assess logarithmic scales.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBUT0RPOlxucGFjbWFuOjpwX2xvYWQodmlyaWRpcylcbnAgPC0gZGF0YV9mICU+JVxuICBmaWx0ZXIoWWVhciAlaW4lIHd3X0kpICU+JVxuICBnZ3Bsb3QobWFwcGluZz1hZXMoeD1BZ2UsIHk9bXgpKSArXG4gIGdlb21fcG9pbnQoYWVzKGNvbG91ciA9IGZvcmNhdHM6OmFzX2ZhY3RvcihZZWFyKSksIHNpemUgPSAuNSkgK1xuICBzY2FsZV94X2Rpc2NyZXRlKGJyZWFrcyA9IGRhdGFfZiRBZ2VbYyhUUlVFLEZBTFNFLEZBTFNFKV0pICtcbiAgI2ZhY2V0X2dyaWQofiBZZWFyKSArXG4gIHhsYWIoXCJBZ2VcIikrXG4gIHlsYWIoXCJtb3J0YWxpdHkgcXVvdGllbnRzIGZvciB3b21lblwiKSArXG4gIGxhYnMoY29sb3VyID0gXCJZZWFyc1wiKSArIHRoZW1lX2J3KClcblxucHJpbnQocClcbmBgYCJ9 -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBUT0RPOlxucGFjbWFuOjpwX2xvYWQodmlyaWRpcylcbnAgPC0gZGF0YV9mICU+JVxuICBmaWx0ZXIoWWVhciAlaW4lIHd3X0kpICU+JVxuICBnZ3Bsb3QobWFwcGluZz1hZXMoeD1BZ2UsIHk9bXgpKSArXG4gIGdlb21fcG9pbnQoYWVzKGNvbG91ciA9IGZvcmNhdHM6OmFzX2ZhY3RvcihZZWFyKSksIHNpemUgPSAuNSkgK1xuICBzY2FsZV94X2Rpc2NyZXRlKGJyZWFrcyA9IGRhdGFfZiRBZ2Vbc2VxKDEsMTExLCBieSA9IDEwKV0pICtcbiAgc2NhbGVfeV9sb2cxMCgpICtcbiAgeGxhYihcIkFnZVwiKStcbiAgeWxhYihcIm1vcnRhbGl0eSBxdW90aWVudHMgZm9yIHdvbWVuXCIpICtcbiAgbGFicyhjb2xvdXIgPSBcIlllYXJzXCIpIFxuXG5wcmludChwKVxuYGBgIn0= -->
 <pre class="r"><code># TODO:
 pacman::p_load(viridis)
 p &lt;- data_f %&gt;%
   filter(Year %in% ww_I) %&gt;%
   ggplot(mapping=aes(x=Age, y=mx)) +
   geom_point(aes(colour = forcats::as_factor(Year)), size = .5) +
-  scale_x_discrete(breaks = data_f$Age[c(TRUE,FALSE,FALSE)]) +
-  #facet_grid(~ Year) +
+  scale_x_discrete(breaks = data_f$Age[seq(1,111, by = 10)]) +
+  scale_y_log10() +
   xlab(&quot;Age&quot;)+
   ylab(&quot;mortality quotients for women&quot;) +
-  labs(colour = &quot;Years&quot;) + theme_bw()
+  labs(colour = &quot;Years&quot;) 
 
 print(p)</code></pre>
 <!-- rnb-source-end -->
@@ -1947,10 +1952,11 @@ print(p)</code></pre>
 <p>Note that you may tweak the <code>ggplot</code> object you just created and feed it with new data using <code>%+%</code> from <code>ggplot</code>.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBUT0RPOlxucCAlKyVcbiAgZmlsdGVyKGRhdGFfbSwgWWVhciAlaW4lIHd3X0kpXG5gYGAifQ== -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBUT0RPOlxucCAlKyVcbiAgZmlsdGVyKGRhdGFfbSwgWWVhciAlaW4lIHd3X0kpICtcbiAgeWxhYihcIm1vcnRhbGl0eSBxdW90aWVudHMgZm9yIG1lblwiKSBcbmBgYCJ9 -->
 <pre class="r"><code># TODO:
 p %+%
-  filter(data_m, Year %in% ww_I)</code></pre>
+  filter(data_m, Year %in% ww_I) +
+  ylab(&quot;mortality quotients for men&quot;) </code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -1979,17 +1985,12 @@ glimpse(big_data)</code></pre>
 <p>Plot mortality quotients (column <code>mx</code>) as a function of <code>Age</code> for years <code>1913</code> up to <code>1921</code> facet according to <code>Sex</code>.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBUT0RPOlxuYmlnX2RhdGEgJT4lXG4gIGZpbHRlcihZZWFyICVpbiUgd3dfSSkgJT4lXG4gIGdncGxvdChtYXBwaW5nPWFlcyh4PUFnZSwgeT1teCkpICtcbiAgZ2VvbV9wb2ludChhZXMoY29sb3VyID0gU2V4KSwgc2hhcGUgPSAnKycsIHNpemUgPSAyKSArXG4gIHNjYWxlX3hfZGlzY3JldGUoYnJlYWtzID0gYmlnX2RhdGEkQWdlW2MoVFJVRSwgRkFMU0UsIEZBTFNFKV0pICtcbiAgI2ZhY2V0X2dyaWQofiBZZWFyKSArXG4gIHhsYWIoXCJBZ2VcIikrXG4gIHlsYWIoXCJtb3J0YWxpdHkgcXVvdGllbnRzXCIpICtcbiAgbGFicyhjb2xvdXIgPSBcIlNleFwiKSArIHRoZW1lX2J3KClcblxuYGBgIn0= -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBUT0RPOlxucCAlKyVcbiAgZmlsdGVyKGJpZ19kYXRhLCBZZWFyICVpbiUgd3dfSSkgKyBcbiAgZmFjZXRfd3JhcCh2YXJzKFNleCkpICtcbiAgeWxhYihcIm1vcnRhbGl0eSBxdW90aWVudHNcIikgXG5cbmBgYCJ9 -->
 <pre class="r"><code># TODO:
-big_data %&gt;%
-  filter(Year %in% ww_I) %&gt;%
-  ggplot(mapping=aes(x=Age, y=mx)) +
-  geom_point(aes(colour = Sex), shape = &#39;+&#39;, size = 2) +
-  scale_x_discrete(breaks = big_data$Age[c(TRUE, FALSE, FALSE)]) +
-  #facet_grid(~ Year) +
-  xlab(&quot;Age&quot;)+
-  ylab(&quot;mortality quotients&quot;) +
-  labs(colour = &quot;Sex&quot;) + theme_bw()
+p %+%
+  filter(big_data, Year %in% ww_I) + 
+  facet_wrap(vars(Sex)) +
+  ylab(&quot;mortality quotients&quot;) 
 </code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
@@ -1997,30 +1998,53 @@ big_data %&gt;%
 <p>Map <code>Sex</code> to some aesthetics and facet by <code>Year</code>.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBUT0RPOlxuYGBgIn0= -->
-<pre class="r"><code># TODO:</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBUT0RPOlxuXG5iaWdfZGF0YSAlPiVcbiAgZmlsdGVyKFllYXIgJWluJSB3d19JKSAlPiVcbiAgZ2dwbG90KG1hcHBpbmc9YWVzKHg9QWdlLCB5PW14KSkgK1xuICBmYWNldF93cmFwKHZhcnMoWWVhcikpICsgXG4gIGdlb21fcG9pbnQoYWVzKGNvbG91ciA9IFNleCksIHNoYXBlID0gJysnLCBzaXplID0gMikrXG4gIHNjYWxlX3hfZGlzY3JldGUoYnJlYWtzID0gYmlnX2RhdGEkQWdlW3NlcSgxLDExMSwgYnkgPSAyMCldKSArXG4gIHNjYWxlX3lfbG9nMTAoKSArXG4gIHhsYWIoXCJBZ2VcIikrXG4gIHlsYWIoXCJtb3J0YWxpdHkgcXVvdGllbnRzXCIpIFxuXG5gYGAifQ== -->
+<pre class="r"><code># TODO:
+
+big_data %&gt;%
+  filter(Year %in% ww_I) %&gt;%
+  ggplot(mapping=aes(x=Age, y=mx)) +
+  facet_wrap(vars(Year)) + 
+  geom_point(aes(colour = Sex), shape = &#39;+&#39;, size = 2)+
+  scale_x_discrete(breaks = big_data$Age[seq(1,111, by = 20)]) +
+  scale_y_log10() +
+  xlab(&quot;Age&quot;)+
+  ylab(&quot;mortality quotients&quot;) 
+</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <dl>
 <dt>List puzzling features on those plots.</dt>
-<dd>TODO:
+<dd>TODO: From 1914 to 1919 we observed a surge in mortality for males aged between 20 and 50 years compared to females. Also in 1918 and in a lesser extent 1919 there was a rise in female mortality rates.
 </dd>
 <dt>Do you have clues about those puzzling aspects?</dt>
-<dd>TODO:# Trends## Infant mortality ratePlot mortality quotients at ages <span class="math inline">\(0, 1, 5\)</span> as a function of time. Distinguish women and men.
+<dd>TODO:
 </dd>
 </dl>
+<p>The First world war can explain the rise in mortality rates and to a lesser extent the spanish flu in 1918/1919.</p>
+</div>
+</div>
+<div id="trends" class="section level1">
+<h1><span class="header-section-number">3</span> Trends</h1>
+<div id="infant-mortality-rateplot-mortality-quotients-at-ages-0-1-5-as-a-function-of-time." class="section level2">
+<h2><span class="header-section-number">3.1</span> Infant mortality ratePlot mortality quotients at ages <span class="math inline">\(0, 1, 5\)</span> as a function of time.</h2>
+<p>Distinguish women and men.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYWdlcyA8LSBjKDAsIDEsIDUpXG4jIFRPRE86XG5hZ2VzXG5tb3J0X2J5X2FnZSA8LSBiaWdfZGF0YSAlPiVcbiAgZmlsdGVyKFllYXIgJWluJSB3d19JLCBhcy5udW1lcmljKGxldmVscyhBZ2UpKSAlaW4lIGFnZXMpICU+JVxuICBnZ3Bsb3QobWFwcGluZz1hZXMoeD1ZZWFyLCB5PW14KSkgK1xuICBnZW9tX3BvaW50KGFlcyhjb2xvdXIgPSBTZXgsIHNoYXBlID0gQWdlKSAsIHNpemUgPSAyKSArIHRoZW1lX2J3KClcbm1vcnRfYnlfYWdlXG5cbmBgYCJ9 -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYWdlcyA8LSBjKDAsIDEsIDUpXG4jIFRPRE86XG5hZ2VzXG5teF9ieV9hZ2UgPC0gYmlnX2RhdGEgJT4lXG4gIGZpbHRlcihBZ2UgJWluJSBhZ2VzKSAlPiVcbiAgZ2dwbG90KG1hcHBpbmc9YWVzKHg9WWVhciwgeT1teCkpICtcbiAgZ2VvbV9wb2ludChhZXMoY29sb3VyID0gU2V4KSAsIHNpemUgPSAxKSArXG4gIHNjYWxlX3lfbG9nMTAoKSArXG4gIGZhY2V0X3dyYXAodmFycyhBZ2UpKSAgK1xuICB5bGFiKFwibW9ydGFsaXR5IHF1b3RpZW50c1wiKSBcblxubXhfYnlfYWdlXG5cbmBgYCJ9 -->
 <pre class="r"><code>ages &lt;- c(0, 1, 5)
 # TODO:
 ages
-mort_by_age &lt;- big_data %&gt;%
-  filter(Year %in% ww_I, as.numeric(levels(Age)) %in% ages) %&gt;%
+mx_by_age &lt;- big_data %&gt;%
+  filter(Age %in% ages) %&gt;%
   ggplot(mapping=aes(x=Year, y=mx)) +
-  geom_point(aes(colour = Sex, shape = Age) , size = 2) + theme_bw()
-mort_by_age
+  geom_point(aes(colour = Sex) , size = 1) +
+  scale_y_log10() +
+  facet_wrap(vars(Age))  +
+  ylab(&quot;mortality quotients&quot;) 
+
+mx_by_age
 </code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
@@ -2030,19 +2054,20 @@ mort_by_age
 <dd>TODO:
 </dd>
 </dl>
+<p>we can associate the drop in infant mortality rates to the advances of modern medicine (e.g. : vaccination)</p>
 </div>
 <div id="as-times-goes-byplot-mortality-quotients-at-ages-15-20-40-60-as-a-function-of-time" class="section level2">
-<h2><span class="header-section-number">2.2</span> As times goes byPlot mortality quotients at ages <span class="math inline">\(15, 20, 40, 60\)</span> as a function of time</h2>
+<h2><span class="header-section-number">3.2</span> As times goes byPlot mortality quotients at ages <span class="math inline">\(15, 20, 40, 60\)</span> as a function of time</h2>
 <p>Distinguish women and men.</p>
 <p>Note again that you may tweak the <code>ggplot</code> object you just created and feed it with new data using <code>%+%</code> from <code>ggplot</code>.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYWdlcyA8LSBjKDE1LCAyMCwgNDAsIDYwKVxuXG4jIFRPRE86XG5tb3J0X2J5X2FnZSAlKyVcbiAgICBmaWx0ZXIoYmlnX2RhdGEsIFllYXIgJWluJSB3d19JLCBhcy5udW1lcmljKGxldmVscyhBZ2UpKSAlaW4lIGFnZXMpXG5gYGAifQ== -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYWdlcyA8LSBjKDE1LCAyMCwgNDAsIDYwKVxuXG4jIFRPRE86XG5teF9ieV9hZ2UgJSslXG4gIGZpbHRlcihiaWdfZGF0YSwgQWdlICVpbiUgYWdlcykgXG5gYGAifQ== -->
 <pre class="r"><code>ages &lt;- c(15, 20, 40, 60)
 
 # TODO:
-mort_by_age %+%
-    filter(big_data, Year %in% ww_I, as.numeric(levels(Age)) %in% ages)</code></pre>
+mx_by_age %+%
+  filter(big_data, Age %in% ages) </code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -2051,52 +2076,50 @@ mort_by_age %+%
 <dd>List puzzling features
 </dd>
 </dl>
+<p>we can see abrupt rises in mortality corresponding to major wars in france : 1870, 1914-1918, 1940s specifically 20 and 40 year-old males.</p>
 </div>
 <div id="mortality-quotients" class="section level2">
-<h2><span class="header-section-number">2.3</span> Mortality quotients</h2>
+<h2><span class="header-section-number">3.3</span> Mortality quotients</h2>
 <ul>
 <li>Plot mortality quotient as a function of age for years <span class="math inline">\(1825, 1850, 1875, \ldots, 2000\)</span>, facet with respect to <code>Sex</code></li>
 <li>Compare different scales (logarithmic or linear) on the different axes</li>
 </ul>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxueWVhcnMgPC0gc2VxKDE4MjUsIDIwMDAsIGJ5ID0gMjUpXG5cbiMgVE9ETzpcblxucCAlKyVcbiAgZmlsdGVyKGJpZ19kYXRhLCBZZWFyICVpbiUgeWVhcnMpIFxuXG4jbG9nYXJ0aXRobWljXG5gYGAifQ== -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxueWVhcnMgPC0gc2VxKDE4MjUsIDIwMDAsIGJ5ID0gMjUpXG5cbiMgVE9ETzpcblxucCAlKyVcbiAgZmlsdGVyKGJpZ19kYXRhLCBZZWFyICVpbiUgeWVhcnMpICtcbiAgZmFjZXRfd3JhcCh2YXJzKFNleCkpXG5cbmBgYCJ9 -->
 <pre class="r"><code>years &lt;- seq(1825, 2000, by = 25)
 
 # TODO:
 
 p %+%
-  filter(big_data, Year %in% years) 
-
-#logartithmic</code></pre>
+  filter(big_data, Year %in% years) +
+  facet_wrap(vars(Sex))
+</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 </div>
 </div>
 <div id="rearrangement" class="section level1">
-<h1><span class="header-section-number">3</span> Rearrangement</h1>
+<h1><span class="header-section-number">4</span> Rearrangement</h1>
 <p>From data.frame <code>data_m, data_f</code>, extract a numerical matrix <code>A</code> where rows correspond to year (say <code>t</code>), columns to age (say <code>x</code>), and entry for year <code>t</code> and age <code>x</code> is the mortality quotient at age <code>x</code> for year <code>t</code>. Finally, we take logarithms: <span class="math inline">\(A_{t,x} = \log m_{t,x}\)</span>.</p>
 <p>You may use functions <code>pivot_wider</code>, <code>pivot_longer</code> from <code>tidyr::</code> package.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBUT0RPOlxuXG5jb252X3RvX0EgPC0gZnVuY3Rpb24oZGF0YSl7XG4gIGRhdGEgJT4lIFxuICBzZWxlY3QoQWdlLCBteCwgWWVhcikgJT4lIFxuICB0aWR5cjo6cGl2b3Rfd2lkZXIobmFtZXNfZnJvbSA9IEFnZSwgdmFsdWVzX2Zyb20gPSBteCkgJT4lXG4gIHJlbW92ZV9yb3duYW1lcyAlPiUgXG4gIGNvbHVtbl90b19yb3duYW1lcyh2YXI9XCJZZWFyXCIpLT4gQV9cbiAgQV9cbn1cbiNhY2FzdFxuXG5BX20gPC0gY29udl90b19BKGRhdGFfbSlcbkFfZiA8LSBjb252X3RvX0EoZGF0YV9mKVxuQV9tIDwtIGxvZyhBX20pXG5BX21cblxuYGBgIn0= -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBUT0RPOlxuXG5jb252X3RvX0EgPC0gZnVuY3Rpb24oZGF0YSl7XG4gIGRhdGEgJT4lIFxuICAgIHNlbGVjdChBZ2UsIG14LCBZZWFyKSAlPiUgXG4gICAgdGlkeXI6OnBpdm90X3dpZGVyKG5hbWVzX2Zyb20gPSBBZ2UsIHZhbHVlc19mcm9tID0gbXgpICU+JVxuICAgIHJlbW92ZV9yb3duYW1lcyAlPiUgXG4gICAgY29sdW1uX3RvX3Jvd25hbWVzKHZhcj1cIlllYXJcIikgLT4gQV9cbiAgICBkYXRhLm1hdHJpeChBXylcbn1cblxuQV9tIDwtIGNvbnZfdG9fQShkYXRhX20pXG5BX2YgPC0gY29udl90b19BKGRhdGFfZilcblxuXG5gYGAifQ== -->
 <pre class="r"><code># TODO:
 
 conv_to_A &lt;- function(data){
   data %&gt;% 
-  select(Age, mx, Year) %&gt;% 
-  tidyr::pivot_wider(names_from = Age, values_from = mx) %&gt;%
-  remove_rownames %&gt;% 
-  column_to_rownames(var=&quot;Year&quot;)-&gt; A_
-  A_
+    select(Age, mx, Year) %&gt;% 
+    tidyr::pivot_wider(names_from = Age, values_from = mx) %&gt;%
+    remove_rownames %&gt;% 
+    column_to_rownames(var=&quot;Year&quot;) -&gt; A_
+    data.matrix(A_)
 }
-#acast
 
 A_m &lt;- conv_to_A(data_m)
 A_f &lt;- conv_to_A(data_f)
-A_m &lt;- log(A_m)
-A_m
 </code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
@@ -2106,26 +2129,14 @@ A_m
 </blockquote>
 </div>
 <div id="life-expectancy" class="section level1">
-<h1><span class="header-section-number">4</span> Life expectancy</h1>
+<h1><span class="header-section-number">5</span> Life expectancy</h1>
 <p>Write a function that takes as input a vector of mortality quotients, as well as an age, and returns the residual life expectancy corresponding to the vector and the given age.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBUT0RPOlxuY29udl90b19BIDwtIGZ1bmN0aW9uKGRhdGEpe1xuICBkYXRhX2YgJT4lXG4gICAgYWNhc3QoWWVhcn5BZ2UsIHZhbHVlLnZhcj1teCkgLT4gZGF0YV9yXG4gIGRhdGFfclxufVxuXG5gYGAifQ== -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBUT0RPOlxucmV4IDwtIGZ1bmN0aW9uKG14LCBhZ2Upe1xuICBzdW0oY3VtcHJvZCgxLXRhaWwobXgsIGxlbmd0aChteCktYWdlKSkpICBcbn1cblxuYGBgIn0= -->
 <pre class="r"><code># TODO:
-conv_to_A &lt;- function(data){
-  data_f %&gt;%
-    acast(Year~Age, value.var=mx) -&gt; data_r
-  data_r
-}
-</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucmV4IDwtIGZ1bmN0aW9uKG14LCBhZ2Upe1xuICAjIFRPRE86XG59XG5cbmBgYCJ9 -->
-<pre class="r"><code>rex &lt;- function(mx, age){
-  # TODO:
+rex &lt;- function(mx, age){
+  sum(cumprod(1-tail(mx, length(mx)-age)))  
 }
 </code></pre>
 <!-- rnb-source-end -->
@@ -2134,13 +2145,33 @@ conv_to_A &lt;- function(data){
 <p>Write a function that takes as input a <em>life table</em> and returns a matrix <span class="math inline">\(E\)</span> where rows correspond to <code>Year</code> and columns to <code>Age</code> with <span class="math inline">\(E_{t,x}\)</span> equal to the residual life expectancy at age <span class="math inline">\(x\)</span> for year <span class="math inline">\(t\)</span>.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBUT0RPOlxuZnVsbF9yZXggPC0gZnVuY3Rpb24obHQpXG57XG4gICMgVE9ETzpcbiAgYWNhc3QoWWVhcn5BZ2UsIHZhbHVlLnZhcj1yZXgobXgsYWdlKSlcbn1cbmBgYCJ9 -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBUT0RPOlxuZnVsbF9yZXggPC0gZnVuY3Rpb24obHQpXG57XG4gIHJldHlwZShsdCkgLT4gbHRcbiAgY29udl90b19BKGx0KSAtPiBBXG4gIFxuICBFIDwtIG1hdHJpeCgwTCwgbnJvdyA9IGRpbShBKVsxXSwgbmNvbCA9IGRpbShBKVsyXSlcbiAgY29sbmFtZXMoRSkgPC0gY29sbmFtZXMoQSlcbiAgcm93bmFtZXMoRSkgPC0gcm93bmFtZXMoQSlcbiAgXG4gIGZvciAoaSBpbiAxOm5yb3coQSkpXG4gICAge1xuICAgIGZvcihhZ2UgaW4gMDpuY29sKEEpLTEpXG4gICAgICB7XG4gICAgICAgIEVbaSwgYWdlKzFdIDwtIHJleChBW2ksXSwgYWdlKVxuICAgICAgfVxuICAgIH1cbiAgRVxufVxuXG5kYXRhX2YyID0gcmVhZHI6OnJlYWRfZGVsaW0ocGFzdGUoXCJMSUZFX1RBQkxFUy9cIixjb3VudHJ5X2NvZGVbY291bnRyeV0sXCIuZmx0cGVyXzF4MS50eHRcIixzZXA9XCJcIiksIGRlbGltPVwiIFwiLCBza2lwID0gMilcblxuZnVsbF9yZXgoZGF0YV9mMiktPkVfZlxuXG5nbGltcHNlKEVfZilcblxuYGBgIn0= -->
 <pre class="r"><code># TODO:
 full_rex &lt;- function(lt)
 {
-  # TODO:
-  acast(Year~Age, value.var=rex(mx,age))
-}</code></pre>
+  retype(lt) -&gt; lt
+  conv_to_A(lt) -&gt; A
+  
+  E &lt;- matrix(0L, nrow = dim(A)[1], ncol = dim(A)[2])
+  colnames(E) &lt;- colnames(A)
+  rownames(E) &lt;- rownames(A)
+  
+  for (i in 1:nrow(A))
+    {
+    for(age in 0:ncol(A)-1)
+      {
+        E[i, age+1] &lt;- rex(A[i,], age)
+      }
+    }
+  E
+}
+
+data_f2 = readr::read_delim(paste(&quot;LIFE_TABLES/&quot;,country_code[country],&quot;.fltper_1x1.txt&quot;,sep=&quot;&quot;), delim=&quot; &quot;, skip = 2)
+
+full_rex(data_f2)-&gt;E_f
+
+glimpse(E_f)
+</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -2148,14 +2179,34 @@ full_rex &lt;- function(lt)
 <p>Function <code>tidyr::pivot_longer</code> may help.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBUT0RPOlxuYGBgIn0= -->
-<pre class="r"><code># TODO:</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBUT0RPOlxuYWdlcyA8LSBjKDYwLCA2NSlcblxucmUgPC0gZGF0YV9mICU+JSBcbiAgZmlsdGVyKGFzLm51bWVyaWMoQWdlKSA+IDYwKSAlPiVcbiAgZnVsbF9yZXgoKSAlPiVcbiAgZGF0YS5mcmFtZSgpXG5cbm5hbWVzKHJlKSA8LSBsZXZlbHMoZGF0YV9mJEFnZSlbNjE6bGVuZ3RoKGxldmVscyhkYXRhX2YkQWdlKSldXG5cbnJlICU+JSBcbiAgcm93bmFtZXNfdG9fY29sdW1uKHZhciA9IFwiWWVhclwiKSAtPiByZVxuXG5yZSAlPiVcbiAgcGl2b3RfbG9uZ2VyKC1ZZWFyLCBuYW1lc190byA9IFwiQWdlXCIsIHZhbHVlc190byA9IFwicmV4XCIpICU+JVxuICBmaWx0ZXIoQWdlICVpbiUgYWdlcykgJT4lXG4gIGdncGxvdChtYXBwaW5nID0gYWVzKHggPSBZZWFyLCB5ID0gcmV4KSkgKyBcbiAgZ2VvbV9wb2ludChhZXMoY29sb3VyID0gQWdlKSkgKyBcbiAgc2NhbGVfeF9kaXNjcmV0ZShicmVha3MgPSByZSRZZWFyW3NlcSg1LDIwMiwgYnkgPSA1MCldKSArXG4gIGZhY2V0X3dyYXAofiBBZ2UpXG5cbmBgYCJ9 -->
+<pre class="r"><code># TODO:
+ages &lt;- c(60, 65)
+
+re &lt;- data_f %&gt;% 
+  filter(as.numeric(Age) &gt; 60) %&gt;%
+  full_rex() %&gt;%
+  data.frame()
+
+names(re) &lt;- levels(data_f$Age)[61:length(levels(data_f$Age))]
+
+re %&gt;% 
+  rownames_to_column(var = &quot;Year&quot;) -&gt; re
+
+re %&gt;%
+  pivot_longer(-Year, names_to = &quot;Age&quot;, values_to = &quot;rex&quot;) %&gt;%
+  filter(Age %in% ages) %&gt;%
+  ggplot(mapping = aes(x = Year, y = rex)) + 
+  geom_point(aes(colour = Age)) + 
+  scale_x_discrete(breaks = re$Year[seq(5,202, by = 50)]) +
+  facet_wrap(~ Age)
+</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 </div>
 <div id="references" class="section level1">
-<h1><span class="header-section-number">5</span> References</h1>
+<h1><span class="header-section-number">6</span> References</h1>
 <ul>
 <li><a href="https://www.mortality.org">Human Mortality Database</a></li>
 <li><a href="https://www.lifetable.de/data/FRA/FRA000018061997CY1.pdf">Tables de mortalité françaises, Jacques Vallin et France Meslé</a></li>
@@ -2163,7 +2214,7 @@ full_rex &lt;- function(lt)
 <!-- rnb-text-end -->
 </div>
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIkhvbWV3b3JrIEk6IExpZmUgVGFibGVzIg0Kc3VidGl0bGU6ICJDb3VyczogQW5hbHlzZSBkZSBEb25uw6llcyBNMSBNYXRow6ltYXRpcXVlcy9NMSBNYXRow6ltYXRpcXVlcy1JbmZvcm1hdGlxdWUiDQphdXRob3I6ICJJbsOocyBEYXJkb3VyaSBldCBNb2hhbWVkIEJvdWRva2hhbmUiDQpvdXRwdXQ6DQogIGh0bWxfbm90ZWJvb2s6DQogICAgY29kZV9mb2xkaW5nOiBub25lDQogICAgbnVtYmVyX3NlY3Rpb25zOiB5ZXMNCiAgICB0b2M6IHllcw0KLS0tDQoNCiMgT2JqZWN0aXZlcw0KDQpUaGlzIG5vdGVib29rIGFpbXMgYXQNCg0KLSB3b3JraW5nIHdpdGggKip0YWJsZXMqKiAoYGRhdGEuZnJhbWVzYCwgYHRpYmJsZXNgLCBgZGF0YS50YWJsZXNgLCAuLi4pIHVzaW5nIGBkcGx5cmAgb3IgYW55IG90aGVyIHF1ZXJ5IGxhbmd1YWdlIChhcyBwcm92aWRlZCBmb3IgZXhhbXBsZSBieSBgZGF0YS50YWJsZWApDQotIHZpc3VhbGl6aW5nIGRlbW9ncmFwaGljIGRhdGEgYXMgcHJvdmlkZWQgYnkgW0h1bWFuIE1vcnRhbGl0eSBEYXRhYmFzZSBvcmdhbml6YXRpb25dKGh0dHBzOi8vd3d3Lm1vcnRhbGl0eS5vcmcpLiMgTGlmZSBkYXRhTGlmZSBkYXRhIHRhYmxlcyBjYW4gYmUgZG93bmxvYWRlZCBmcm9tIFtodHRwczovL3d3dy5tb3J0YWxpdHkub3JnXShodHRwczovL3d3dy5tb3J0YWxpdHkub3JnKS4gU29tZSBkYXRhIGhhdmUgYmVlbiBkb3dubG9hZGVkIGZvciB5b3UgYW5kIGFyZSBhdmFpbGFibGUgW2hlcmVdKCkuDQoNClNlZSBhbHNvIFtodHRwczovL3d3dy5saWZldGFibGUuZGVdKGh0dHBzOi8vd3d3LmxpZmV0YWJsZS5kZSkuDQoNCklmIHlvdSBpbnN0YWxsIGFuZCBsb2FkIHBhY2thZ2UgW2h0dHBzOi8vY3Jhbi5yLXByb2plY3Qub3JnL3dlYi9wYWNrYWdlcy9kZW1vZ3JhcGh5L2luZGV4Lmh0bWxdKGh0dHBzOi8vY3Jhbi5yLXByb2plY3Qub3JnL3dlYi9wYWNrYWdlcy9kZW1vZ3JhcGh5L2luZGV4Lmh0bWwpLCB5b3Ugd2lsbCBhbHNvIGZpbmQgbGlmZSBkYXRhIHRhYmxlcy4NCg0KYGBge3J9DQpwYWNtYW46OnBfbG9hZCh0aWR5dmVyc2UpDQpwYWNtYW46OnBfbG9hZCh0aWR5bW9kZWxzKQ0KcGFjbWFuOjpwX2xvYWQocmVzaGFwZTIpDQpgYGANCg0KIyMgTGlmZSB0YWJsZSBpbnNwZWN0aW9uDQoNCkxvYWQgdGhlIGRhdGEgY29ycmVzcG9uZGluZyB0byB0aGUgY291bnRyeSB5b3UgYXJlIHN1cHBvc2VkIHRvIHdvcmsgb24uWW91IG1heSB1c2UgYHJlYWRyOjpyZWFkX2RlbGltKClgIHdpdGggYXBwcm9wcmlhdGUgb3B0aW9ucy4NCg0KRm9yIGNvdW50cnkgZGVub3RlZCBieSBjb3VudHJ5IGNvZGUgYHh4eGAsIHlvdSB3aWxsIGxvYWQgdGhyZWUgbGlmZSB0YWJsZXM6DQoNCi0gYHh4eC5mbHRwZXJfMXgxLnR4dGAgd2hlcmUgYGZgIHN0YW5kcyBmb3IgX2ZlbWFsZV8NCi0gYHh4eC5tbHRwZXJfMXgxLnR4dGAgd2hlcmUgYG1gIHN0YW5kcyBmb3IgX21hbGVfDQotIGB4eHguYmx0cGVyXzF4MS50eHRgIHdoZXJlIGBiYCBzdGFuZHMgZm9yIF9ib3RoXw0KDQpOYW1lIHRoZSBkYXRhLmZyYW1lcyBgZGF0YV9mYCwgYGRhdGFfbWAsIGBkYXRhX2JgLg0KDQpgYGB7cn0NCmNvdW50cnlfY29kZSA8LSBsaXN0KGZyPSdGUkFDTlAnLA0KICAgICAgICAgICAgICAgICAgICAgYmU9J0JFTCcsDQogICAgICAgICAgICAgICAgICAgICBnYj0nR0JSVEVOVycsDQogICAgICAgICAgICAgICAgICAgICBubD0nTkxEJywNCiAgICAgICAgICAgICAgICAgICAgIGl0PSdJVEEnLA0KICAgICAgICAgICAgICAgICAgICAgc3dlPSdTV0UnLA0KICAgICAgICAgICAgICAgICAgICAgc3A9J0VTUCcsDQogICAgICAgICAgICAgICAgICAgICB1cz0nVVNBJykNCg0KY291bnRyeSA8LSAnZnInDQoNCnd3X0kgPC0gMTkxMzoxOTIxDQojd3dfSSA8LSAxOTM4OjE5NDYgIyAoVVMpDQpgYGANCg0KYGBge3J9DQojIFRPRE86DQpkYXRhX2YgPSByZWFkcjo6cmVhZF9kZWxpbShwYXN0ZSgiTElGRV9UQUJMRVMvIixjb3VudHJ5X2NvZGVbY291bnRyeV0sIi5mbHRwZXJfMXgxLnR4dCIsc2VwPSIiKSwgZGVsaW09IiAiLCBza2lwID0gMikNCmRhdGFfbSA9IHJlYWRyOjpyZWFkX2RlbGltKHBhc3RlKCJMSUZFX1RBQkxFUy8iLGNvdW50cnlfY29kZVtjb3VudHJ5XSwiLm1sdHBlcl8xeDEudHh0IixzZXA9IiIpLCBkZWxpbT0iICIsIHNraXAgPSAyKQ0KZGF0YV9iID0gcmVhZHI6OnJlYWRfZGVsaW0ocGFzdGUoIkxJRkVfVEFCTEVTLyIsY291bnRyeV9jb2RlW2NvdW50cnldLCIuYmx0cGVyXzF4MS50eHQiLHNlcD0iIiksIGRlbGltPSIgIiwgc2tpcCA9IDIpDQoNCmBgYA0KDQpGb3IgZWFjaCBsaWZlIHRhYmxlLCBlYWNoIHJvdyBpcyBpZGVudGlmaWVkIGJ5IGBZZWFyYCBhbmQgYEFnZWAuDQpSZWFkIHRoZSBkb2N1bWVudGF0aW9uIGFuZCBjb25jaXNlbHkgZXhwbGFpbiB0aGUgbWVhbmluZyBvZiBjb2x1bW5zDQoNCkNoZWNrIG9uIFtodHRwOi8vd3d3Lm1vcnRhbGl0eS5vcmddKGh0dHA6Ly93d3cubW9ydGFsaXR5Lm9yZykgdGhlIG1lYW5pbmcgb2YgdGhlIGRpZmZlcmVudCBjb2x1bW5zOg0KDQpgbXhgDQo6IENlbnRyYWwgZGVhdGggcmF0ZSBiZXR3ZWVuIGFnZXMgeCBhbmQgeCtuIHdoZXJlIG49MSwgNCwgNSwgb3Ig4oieIChvcGVuIGFnZSBpbnRlcnZhbCkNCg0KYHF4YA0KOiBQcm9iYWJpbGl0eSBvZiBkZWF0aCBiZXR3ZWVuIGFnZXMgeCBhbmQgeCtuDQoNCmBheGANCjogQXZlcmFnZSBsZW5ndGggb2Ygc3Vydml2YWwgYmV0d2VlbiBhZ2VzIHggYW5kIHgrbiBmb3IgcGVyc29ucyBkeWluZyBpbiB0aGUgaW50ZXJ2YWwNCg0KYGx4YA0KOiBOdW1iZXIgb2Ygc3Vydml2b3JzIGF0IGV4YWN0IGFnZSB4LCBhc3N1bWluZyBsKDApID0gMTAwLDAwMA0KDQpgZHhgDQo6IE51bWJlciBvZiBkZWF0aHMgYmV0d2VlbiBhZ2VzIHggYW5kIHgrbg0KDQpgZXhgOg0KOiBMaWZlIGV4cGVjdGFuY3kgYXQgZXhhY3QgYWdlIHggKGluIHllYXJzKQ0KDQotIFdoYXQgaXMgdGhlIGNsYXNzIG9mIGBkYXRhX2IsIC4uLmA/DQotIEluc3BlY3QgYGRhdGFfZmAgdXNpbmcgYGdsaW1wc2VgLg0KDQpgYGB7cn0NCiMgVE9ETzoNCiNjbGFzcyhkYXRhX2IpDQpnbGltcHNlKGRhdGFfZikNCg0Kdj1jKCkNCmZvciAoaSBpbiAxOm5jb2woZGF0YV9iKSl7DQogIHY9Yyh2LChpcy5uYShkYXRhX2JbLGldKSkpDQp9DQp2DQoNCmBgYA0KDQpXaGljaCBjb2x1bW5zIG5lZWRzIHJldHlwaW5nPw0KOiBUT0RPOg0KDQojIyBMaWZlIHRhYmxlIGNsZWFuaW5nDQoNClJlbW92ZSB3aGl0ZSBzcGFjZXMgZnJvbSBjb2x1bW4gbmFtZXMuIFlvdSBtYXkgZmluZCB1c2VmdWwgZnVuY3Rpb25zIGluIHBhY2thZ2UgYHN0cmluZ3JgLg0KVHJ5IHRvIGZvbGxvdyB0aGUgKipEUlkqKiBwcmluY2lwbGUgKERvbid0IFJlcGVhdCBZb3Vyc2VsZikuDQpZb3UgbmVlZCB0byBwZXJmb3JtIHRoZSBzYW1lIG9wZXJhdGlvbiBvbiBldmVyeSBjb2x1bW4gbmFtZS4NCg0KWW91IG1heSB1c2UgZm9uY3Rpb25hbCBwcm9ncmFtbWluZyAodXNpbmcgYHB1cnJyOjpgIG9yIGBwbHlyOjpgKQ0KdG8gcHJvY2VzcyBhbGwgY29sdW1uIG5hbWVzIG9mIGBkYXRhX3h4eGAgdXNpbmcgb25lIGV4cHJlc3Npb24uDQpTb21lIHZlcmJzIGluIGBkcGx5cjo6YCBwcm92aWRlIHlvdSB3aXRoIHNob3J0Y3V0cy5Xcml0ZSBhIGZ1bmN0aW9uIGByZXR5cGVgIHRoYXQgY2FuIHRpZHkgZGF0YS5mcmFtZXMNCndpdGggdGhlIHNhbWUgc2NoZW1hIGFzIGBkYXRhX3h4eGAgKGNsZWFuaW5nIGNvbHVtbiBuYW1lcyBpZiBuZWNlc3NhcnksIGNhc3RpbmcNCnNvbWUgY29sdW1ucyB0byBgbnVtZXJpY2AsIG90aGVycyB0byBgZG91YmxlYCkuDQoNCmBgYHtyfQ0KcmV0eXBlIDwtIGZ1bmN0aW9uKGRhdGEpew0KICBuYW1lcyhkYXRhKSAlPiUNCiAgc3RyaW5ncjo6c3RyX3JlcGxhY2VfYWxsKC4sICcgJywgJycpIC0+IG5hbWVzKGRhdGEpDQogIGRhdGEgJT4lDQogICAgZHBseXI6Om11dGF0ZV9hdCh2YXJzKG14LCBxeCwgYXgsIGV4KSwgYXMuZG91YmxlKSAlPiUNCiAgICBkcGx5cjo6bXV0YXRlX2F0KHZhcnMoWWVhciwgbHgsIGR4LCBMeCwgVHgpLCBhcy5pbnRlZ2VyKSAlPiUNCiAgICBkcGx5cjo6bXV0YXRlX2F0KHZhcnMoQWdlKSwgYXMuZmFjdG9yKSAtPiBkYXRhDQogIGRhdGENCn0NCg0KZ2xpbXBzZShkYXRhX2YpDQpgYGANCg0KVXNlZnVsIHRvb2xzOg0KDQotIGBkcGx5cjo6bXV0YXRlX2F0YA0KLSBgZHBseXI6OnJlbmFtZWANCi0gYGRwbHlyOjpyZW5hbWVgQXBwbHkgZnVuY3Rpb24gYHJldHlwZWAgdG8gdGhlIHRocmVlIGRhdGEuZnJhbWVzLg0KDQpgYGB7cn0NCiMgVE9ETzoNCg0KY291bnRfbmEgPC0gZnVuY3Rpb24oZGF0YSl7DQogIGRhdGEgJT4lDQogICAgZHBseXI6OnN1bW1hcmlzZV9hbGwoLmZ1bnMgPSB+c3VtKGlzLm5hKC4pKSktPiByZXMNCiAgcmVzDQp9DQoNCnJldHlwZShkYXRhX2YpIC0+IGRhdGFfZg0KcmV0eXBlKGRhdGFfbSkgLT4gZGF0YV9tDQpyZXR5cGUoZGF0YV9iKSAtPiBkYXRhX2INCg0KY291bnRfbmEoZGF0YV9mKQ0KDQpgYGANCg0KIyBIYXphcmQgcmF0ZXMsIG1vcnRhbGl0eSBxdW90aWVudHMNCg0KUGxvdCBtb3J0YWxpdHkgcXVvdGllbnRzIChjb2x1bW4gYG14YCkgZm9yIHdvbWVuIGFzIGEgZnVuY3Rpb24gb2YgYEFnZWAgZm9yIHllYXJzIGAxOTEzYCB1cCB0byBgMTkyMWAuDQpVc2UgYWVzdGhldGljcyB0byBkaXN0aW5ndWlzaCB5ZWFycy4gWW91IHdpbGwgbmVlZCB0byBjYXRlZ29yaXplIHRoZSBgWWVhcmAgY29sdW1uDQooYGZvcmNhdHM6OmAgbWF5IGJlIGhlbHBmdWwpLg0KDQpQYXkgYXR0ZW50aW9uIHRvIGF4ZXMgbGFiZWxzLCB0byBsZWdlbmRzLiBBc3Nlc3MgbG9nYXJpdGhtaWMgc2NhbGVzLg0KDQpgYGB7cn0NCiMgVE9ETzoNCnBhY21hbjo6cF9sb2FkKHZpcmlkaXMpDQpwIDwtIGRhdGFfZiAlPiUNCiAgZmlsdGVyKFllYXIgJWluJSB3d19JKSAlPiUNCiAgZ2dwbG90KG1hcHBpbmc9YWVzKHg9QWdlLCB5PW14KSkgKw0KICBnZW9tX3BvaW50KGFlcyhjb2xvdXIgPSBmb3JjYXRzOjphc19mYWN0b3IoWWVhcikpLCBzaXplID0gLjUpICsNCiAgc2NhbGVfeF9kaXNjcmV0ZShicmVha3MgPSBkYXRhX2YkQWdlW2MoVFJVRSxGQUxTRSxGQUxTRSldKSArDQogICNmYWNldF9ncmlkKH4gWWVhcikgKw0KICB4bGFiKCJBZ2UiKSsNCiAgeWxhYigibW9ydGFsaXR5IHF1b3RpZW50cyBmb3Igd29tZW4iKSArDQogIGxhYnMoY29sb3VyID0gIlllYXJzIikgKyB0aGVtZV9idygpDQoNCnByaW50KHApDQpgYGANCg0KUGxvdCBtb3J0YWxpdHkgcXVvdGllbnRzIChjb2x1bW4gYG14YCkgZm9yIG1lbiBhcyBhIGZ1bmN0aW9uIG9mIGBBZ2VgIGZvciB5ZWFycyBgMTkxM2AgdXAgdG8gYDE5MjFgLg0KDQpOb3RlIHRoYXQgeW91IG1heSB0d2VhayB0aGUgYGdncGxvdGAgb2JqZWN0IHlvdSBqdXN0IGNyZWF0ZWQgYW5kIGZlZWQgaXQgd2l0aCBuZXcgZGF0YQ0KdXNpbmcgYCUrJWAgZnJvbSBgZ2dwbG90YC4NCg0KYGBge3J9DQojIFRPRE86DQpwICUrJQ0KICBmaWx0ZXIoZGF0YV9tLCBZZWFyICVpbiUgd3dfSSkNCmBgYA0KDQojIyBGYWNldHRpbmcNCg0KQnVpbGQgYSBkYXRhLmZyYW1lIGNhbGxlZCBgYmlnX2RhdGFgLCB3aGVyZSByb3dzIGFyZQ0KaWRlbnRpZmllZCBieSBgWWVhciwgQWdlLCBTZXhgIGFuZCBjb21lcyBlaXRoZXINCmZyb20gYGRhdGFfZmAgb3IgYGRhdGFfbWAuIENvbHVtbiBgU2V4YCBzaG91bGQgYmUgYSBgZmFjdG9yYA0Kd2l0aCB0d28gbGV2ZWxzIGNhbGxlZCBgTWFsZWAgYW5kIGBGZW1hbGVgLg0KDQpZb3UgbWF5IHByb2NlZWQgYXMgZm9sbG93czotIEFkZCBhIGNoYXJhY3RlciBjb2x1bW4gIlNleCIgdG8gYGRhdGFfZmAgYW5kIGBkYXRhX21gLg0KDQotIFN0YWNrIHRoZSB0d28gZGF0YS5mcmFtZXMgKHVzaW5nIGByYmluZGApIGludG8gZGF0YS5mcmFtZSBuYW1lZCBgYmlnX2RhdGFgLg0KLSBDYXN0IGNvbHVtbiBgU2V4YCBhcyBhIGZhY3Rvci4NCg0KYGBge3J9DQojIFRPRE86DQpkYXRhX20kU2V4IDwtICJtYWxlIg0KZGF0YV9mJFNleCA8LSAiZmVtYWxlIg0KYmlnX2RhdGEgPSByYmluZChkYXRhX2YsIGRhdGFfbSkNCmJpZ19kYXRhJT4lDQogIGRwbHlyOjptdXRhdGUoU2V4ID0gZm9yY2F0czo6YXNfZmFjdG9yKFNleCkpIC0+IGJpZ19kYXRhDQoNCmdsaW1wc2UoYmlnX2RhdGEpDQpgYGANCg0KUGxvdCBtb3J0YWxpdHkgcXVvdGllbnRzIChjb2x1bW4gYG14YCkgYXMgYSBmdW5jdGlvbiBvZiBgQWdlYCBmb3INCnllYXJzIGAxOTEzYCB1cCB0byBgMTkyMWAgZmFjZXQgYWNjb3JkaW5nIHRvIGBTZXhgLg0KDQpgYGB7cn0NCiMgVE9ETzoNCmJpZ19kYXRhICU+JQ0KICBmaWx0ZXIoWWVhciAlaW4lIHd3X0kpICU+JQ0KICBnZ3Bsb3QobWFwcGluZz1hZXMoeD1BZ2UsIHk9bXgpKSArDQogIGdlb21fcG9pbnQoYWVzKGNvbG91ciA9IFNleCksIHNoYXBlID0gJysnLCBzaXplID0gMikgKw0KICBzY2FsZV94X2Rpc2NyZXRlKGJyZWFrcyA9IGJpZ19kYXRhJEFnZVtjKFRSVUUsIEZBTFNFLCBGQUxTRSldKSArDQogICNmYWNldF9ncmlkKH4gWWVhcikgKw0KICB4bGFiKCJBZ2UiKSsNCiAgeWxhYigibW9ydGFsaXR5IHF1b3RpZW50cyIpICsNCiAgbGFicyhjb2xvdXIgPSAiU2V4IikgKyB0aGVtZV9idygpDQoNCmBgYA0KDQpNYXAgYFNleGAgdG8gc29tZSBhZXN0aGV0aWNzIGFuZCBmYWNldCBieSBgWWVhcmAuDQoNCmBgYHtyfQ0KIyBUT0RPOg0KYGBgDQoNCkxpc3QgcHV6emxpbmcgZmVhdHVyZXMgb24gdGhvc2UgcGxvdHMuDQo6IFRPRE86DQoNCkRvIHlvdSBoYXZlIGNsdWVzIGFib3V0IHRob3NlIHB1enpsaW5nIGFzcGVjdHM/DQo6IFRPRE86IyBUcmVuZHMjIyBJbmZhbnQgbW9ydGFsaXR5IHJhdGVQbG90IG1vcnRhbGl0eSBxdW90aWVudHMgYXQgYWdlcyAkMCwgMSwgNSQgYXMgYSBmdW5jdGlvbiBvZiB0aW1lLg0KRGlzdGluZ3Vpc2ggd29tZW4gYW5kIG1lbi4NCg0KYGBge3J9DQphZ2VzIDwtIGMoMCwgMSwgNSkNCiMgVE9ETzoNCmFnZXMNCm1vcnRfYnlfYWdlIDwtIGJpZ19kYXRhICU+JQ0KICBmaWx0ZXIoWWVhciAlaW4lIHd3X0ksIGFzLm51bWVyaWMobGV2ZWxzKEFnZSkpICVpbiUgYWdlcykgJT4lDQogIGdncGxvdChtYXBwaW5nPWFlcyh4PVllYXIsIHk9bXgpKSArDQogIGdlb21fcG9pbnQoYWVzKGNvbG91ciA9IFNleCwgc2hhcGUgPSBBZ2UpICwgc2l6ZSA9IDIpICsgdGhlbWVfYncoKQ0KbW9ydF9ieV9hZ2UNCg0KYGBgDQoNCkNhbiB5b3UgbWF0Y2ggYWJydXB0IGNoYW5nZXMgYW5kIGhpc3RvcmljYWwgZXZlbnRzPw0KOiBUT0RPOg0KDQojIyBBcyB0aW1lcyBnb2VzIGJ5UGxvdCBtb3J0YWxpdHkgcXVvdGllbnRzIGF0IGFnZXMgJDE1LCAyMCwgNDAsIDYwJCBhcyBhIGZ1bmN0aW9uIG9mIHRpbWUNCg0KRGlzdGluZ3Vpc2ggd29tZW4gYW5kIG1lbi4NCg0KTm90ZSBhZ2FpbiB0aGF0IHlvdSBtYXkgdHdlYWsgdGhlIGBnZ3Bsb3RgIG9iamVjdCB5b3UganVzdCBjcmVhdGVkIGFuZCBmZWVkIGl0IHdpdGggbmV3IGRhdGENCnVzaW5nIGAlKyVgIGZyb20gYGdncGxvdGAuDQoNCmBgYHtyfQ0KYWdlcyA8LSBjKDE1LCAyMCwgNDAsIDYwKQ0KDQojIFRPRE86DQptb3J0X2J5X2FnZSAlKyUNCiAgICBmaWx0ZXIoYmlnX2RhdGEsIFllYXIgJWluJSB3d19JLCBhcy5udW1lcmljKGxldmVscyhBZ2UpKSAlaW4lIGFnZXMpDQpgYGANCg0KVE9ETzoNCjogTGlzdCBwdXp6bGluZyBmZWF0dXJlcw0KDQojIyBNb3J0YWxpdHkgcXVvdGllbnRzDQoNCi0gUGxvdCBtb3J0YWxpdHkgcXVvdGllbnQgYXMgYSBmdW5jdGlvbiBvZiBhZ2UgZm9yIHllYXJzICQxODI1LCAxODUwLCAxODc1LCBcbGRvdHMsIDIwMDAkLCBmYWNldCB3aXRoIHJlc3BlY3QgdG8gYFNleGANCi0gQ29tcGFyZSBkaWZmZXJlbnQgc2NhbGVzIChsb2dhcml0aG1pYyBvciBsaW5lYXIpIG9uIHRoZSBkaWZmZXJlbnQgYXhlcw0KDQpgYGB7cn0NCnllYXJzIDwtIHNlcSgxODI1LCAyMDAwLCBieSA9IDI1KQ0KDQojIFRPRE86DQoNCnAgJSslDQogIGZpbHRlcihiaWdfZGF0YSwgWWVhciAlaW4lIHllYXJzKSANCg0KI2xvZ2FydGl0aG1pYw0KYGBgDQoNCiMgUmVhcnJhbmdlbWVudA0KDQpGcm9tIGRhdGEuZnJhbWUgYGRhdGFfbSwgZGF0YV9mYCwgZXh0cmFjdCBhIG51bWVyaWNhbCBtYXRyaXggYEFgIHdoZXJlIHJvd3MgY29ycmVzcG9uZCB0byB5ZWFyIChzYXkgYHRgKSwgY29sdW1ucyB0byBhZ2UgKHNheSBgeGApLCBhbmQgZW50cnkNCmZvciB5ZWFyIGB0YCBhbmQgYWdlIGB4YCBpcyB0aGUgbW9ydGFsaXR5IHF1b3RpZW50IGF0IGFnZSBgeGAgZm9yIHllYXIgYHRgLiBGaW5hbGx5LCB3ZSB0YWtlIGxvZ2FyaXRobXM6ICRBX3t0LHh9ID0gXGxvZyBtX3t0LHh9JC4NCg0KWW91IG1heSB1c2UgZnVuY3Rpb25zIGBwaXZvdF93aWRlcmAsIGBwaXZvdF9sb25nZXJgIGZyb20gYHRpZHlyOjpgIHBhY2thZ2UuDQoNCmBgYHtyfQ0KIyBUT0RPOg0KDQpjb252X3RvX0EgPC0gZnVuY3Rpb24oZGF0YSl7DQogIGRhdGEgJT4lIA0KICBzZWxlY3QoQWdlLCBteCwgWWVhcikgJT4lIA0KICB0aWR5cjo6cGl2b3Rfd2lkZXIobmFtZXNfZnJvbSA9IEFnZSwgdmFsdWVzX2Zyb20gPSBteCkgJT4lDQogIHJlbW92ZV9yb3duYW1lcyAlPiUgDQogIGNvbHVtbl90b19yb3duYW1lcyh2YXI9IlllYXIiKS0+IEFfDQogIEFfDQp9DQojYWNhc3QNCg0KQV9tIDwtIGNvbnZfdG9fQShkYXRhX20pDQpBX2YgPC0gY29udl90b19BKGRhdGFfZikNCkFfbSA8LSBsb2coQV9tKQ0KQV9tDQoNCmBgYA0KDQo+IEZhY3Rvcml6YXRpb25zIG9mICRBJCBwbGF5IGEgc2lnbmlmaWNhbnQgcm9sZSBpbiBkZW1vZ3JhcGhpYyBtb2RlbGluZy4gTW9yZSBvbiB0aGlzIHRvcGljIGluIFBDQSBjaGFwdGVyLg0KDQojIExpZmUgZXhwZWN0YW5jeQ0KDQpXcml0ZSBhIGZ1bmN0aW9uIHRoYXQgdGFrZXMgYXMgaW5wdXQgYSB2ZWN0b3Igb2YgbW9ydGFsaXR5IHF1b3RpZW50cywgYXMgd2VsbCBhcyBhbiBhZ2UsIGFuZCByZXR1cm5zIHRoZSByZXNpZHVhbCBsaWZlIGV4cGVjdGFuY3kgY29ycmVzcG9uZGluZyB0byB0aGUgdmVjdG9yIGFuZCB0aGUgZ2l2ZW4gYWdlLg0KDQpgYGB7cn0NCiMgVE9ETzoNCmNvbnZfdG9fQSA8LSBmdW5jdGlvbihkYXRhKXsNCiAgZGF0YV9mICU+JQ0KICAgIGFjYXN0KFllYXJ+QWdlLCB2YWx1ZS52YXI9bXgpIC0+IGRhdGFfcg0KICBkYXRhX3INCn0NCg0KYGBgDQoNCmBgYHtyfQ0KcmV4IDwtIGZ1bmN0aW9uKG14LCBhZ2Upew0KICAjIFRPRE86DQp9DQoNCmBgYA0KDQpXcml0ZSBhIGZ1bmN0aW9uIHRoYXQgdGFrZXMgYXMgaW5wdXQNCmEgX2xpZmUgdGFibGVfIGFuZCByZXR1cm5zIGEgbWF0cml4ICRFJCB3aGVyZSByb3dzIGNvcnJlc3BvbmQgdG8gYFllYXJgDQphbmQgY29sdW1ucyB0byBgQWdlYCB3aXRoICRFX3t0LHh9JCBlcXVhbCB0byB0aGUgcmVzaWR1YWwgbGlmZSBleHBlY3RhbmN5IGF0IGFnZSAkeCQgZm9yIHllYXIgJHQkLg0KDQpgYGB7cn0NCiMgVE9ETzoNCmZ1bGxfcmV4IDwtIGZ1bmN0aW9uKGx0KQ0Kew0KICAjIFRPRE86DQogIGFjYXN0KFllYXJ+QWdlLCB2YWx1ZS52YXI9cmV4KG14LGFnZSkpDQp9DQpgYGANCg0KUGxvdCByZXNpZHVhbCBsaWZlIGV4cGVjdGFuY3kgYXMgYSBmdW5jdGlvbiBvZiBgWWVhcmAgYXQgYWdlcyAkNjAkIGFuZCAkNjUkLg0KWW91IG1heSBwcm9jZWVkIGJ5IGZpcnN0IHBlcmZvcm1pbmcgYWdncmVnYXRpb24gb24gYGRhdGFfLi4uYCAoZ3JvdXBpbmcgYnkgYFllYXJgKSwNCmFuZCB0aGVuIGNvbXB1dGUgcmVzaWR1YWwgbGlmZSBleHBlY3RhbmN5IGF0IGRpZmZlcmVudCBhZ2VzDQpieSBzbGljaW5nIHRoZSBgbXhgIGNvbHVtbi4gUmVjYWxsIHRoYXQgd2hlbiBtYXBwaW5nIGhhemFyZCByYXRlIHRvDQpyZXNpZHVhbCBsaWZlIGV4cGV4dGFuY3ksIHRoZSBvcmRlciBvZiBtdWx0aXBsaWNhdGlvbnMgbWF0dGVycy4gSG93IGNvdWxkIHlvdSBzZWN1cmUNCnlvdXIgY29tcHV0YXRpb24gc28gdGhhdCBpdCBzdGlsbCB3b3JrcyBpZiB0aGUgcm93cyBvZiBgZGF0YV8uLi5gIGFyZSBzaHVmZmxlZCA/DQoNCkZ1bmN0aW9uIGB0aWR5cjo6cGl2b3RfbG9uZ2VyYCBtYXkgaGVscC4NCg0KYGBge3J9DQojIFRPRE86DQpgYGANCg0KIyBSZWZlcmVuY2VzDQoNCi0gW0h1bWFuIE1vcnRhbGl0eSBEYXRhYmFzZV0oaHR0cHM6Ly93d3cubW9ydGFsaXR5Lm9yZykNCi0gW1RhYmxlcyBkZSBtb3J0YWxpdMOpIGZyYW7Dp2Fpc2VzLCBKYWNxdWVzIFZhbGxpbiBldCBGcmFuY2UgTWVzbMOpXShodHRwczovL3d3dy5saWZldGFibGUuZGUvZGF0YS9GUkEvRlJBMDAwMDE4MDYxOTk3Q1kxLnBkZikNCg==</div>
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIkhvbWV3b3JrIEk6IExpZmUgVGFibGVzIg0Kc3VidGl0bGU6ICJDb3VyczogQW5hbHlzZSBkZSBEb25uw6llcyBNMSBNYXRow6ltYXRpcXVlcy9NMSBNYXRow6ltYXRpcXVlcy1JbmZvcm1hdGlxdWUiDQphdXRob3I6ICJJbsOocyBEYXJkb3VyaSAsIEx5Y2lhIEZlenpvdWEgZXQgTW9oYW1lZCBCb3Vkb2toYW5lIg0Kb3V0cHV0Og0KICBodG1sX25vdGVib29rOg0KICAgIGNvZGVfZm9sZGluZzogbm9uZQ0KICAgIG51bWJlcl9zZWN0aW9uczogeWVzDQogICAgdG9jOiB5ZXMNCi0tLQ0KDQojIE9iamVjdGl2ZXMNCg0KVGhpcyBub3RlYm9vayBhaW1zIGF0DQoNCi0gd29ya2luZyB3aXRoICoqdGFibGVzKiogKGBkYXRhLmZyYW1lc2AsIGB0aWJibGVzYCwgYGRhdGEudGFibGVzYCwgLi4uKSB1c2luZyBgZHBseXJgIG9yIGFueSBvdGhlciBxdWVyeSBsYW5ndWFnZSAoYXMgcHJvdmlkZWQgZm9yIGV4YW1wbGUgYnkgYGRhdGEudGFibGVgKQ0KLSB2aXN1YWxpemluZyBkZW1vZ3JhcGhpYyBkYXRhIGFzIHByb3ZpZGVkIGJ5IFtIdW1hbiBNb3J0YWxpdHkgRGF0YWJhc2Ugb3JnYW5pemF0aW9uXShodHRwczovL3d3dy5tb3J0YWxpdHkub3JnKS4jIExpZmUgZGF0YUxpZmUgZGF0YSB0YWJsZXMgY2FuIGJlIGRvd25sb2FkZWQgZnJvbSBbaHR0cHM6Ly93d3cubW9ydGFsaXR5Lm9yZ10oaHR0cHM6Ly93d3cubW9ydGFsaXR5Lm9yZykuIFNvbWUgZGF0YSBoYXZlIGJlZW4gZG93bmxvYWRlZCBmb3IgeW91IGFuZCBhcmUgYXZhaWxhYmxlIFtoZXJlXSgpLg0KDQpTZWUgYWxzbyBbaHR0cHM6Ly93d3cubGlmZXRhYmxlLmRlXShodHRwczovL3d3dy5saWZldGFibGUuZGUpLg0KDQpJZiB5b3UgaW5zdGFsbCBhbmQgbG9hZCBwYWNrYWdlIFtodHRwczovL2NyYW4uci1wcm9qZWN0Lm9yZy93ZWIvcGFja2FnZXMvZGVtb2dyYXBoeS9pbmRleC5odG1sXShodHRwczovL2NyYW4uci1wcm9qZWN0Lm9yZy93ZWIvcGFja2FnZXMvZGVtb2dyYXBoeS9pbmRleC5odG1sKSwgeW91IHdpbGwgYWxzbyBmaW5kIGxpZmUgZGF0YSB0YWJsZXMuDQoNCmBgYHtyfQ0KcGFjbWFuOjpwX2xvYWQodGlkeXZlcnNlKQ0KcGFjbWFuOjpwX2xvYWQodGlkeW1vZGVscykNCnBhY21hbjo6cF9sb2FkKGRwbHlyKQ0KYGBgDQoNCiMjIExpZmUgdGFibGUgaW5zcGVjdGlvbg0KDQpMb2FkIHRoZSBkYXRhIGNvcnJlc3BvbmRpbmcgdG8gdGhlIGNvdW50cnkgeW91IGFyZSBzdXBwb3NlZCB0byB3b3JrIG9uLllvdSBtYXkgdXNlIGByZWFkcjo6cmVhZF9kZWxpbSgpYCB3aXRoIGFwcHJvcHJpYXRlIG9wdGlvbnMuDQoNCkZvciBjb3VudHJ5IGRlbm90ZWQgYnkgY291bnRyeSBjb2RlIGB4eHhgLCB5b3Ugd2lsbCBsb2FkIHRocmVlIGxpZmUgdGFibGVzOg0KDQotIGB4eHguZmx0cGVyXzF4MS50eHRgIHdoZXJlIGBmYCBzdGFuZHMgZm9yIF9mZW1hbGVfDQotIGB4eHgubWx0cGVyXzF4MS50eHRgIHdoZXJlIGBtYCBzdGFuZHMgZm9yIF9tYWxlXw0KLSBgeHh4LmJsdHBlcl8xeDEudHh0YCB3aGVyZSBgYmAgc3RhbmRzIGZvciBfYm90aF8NCg0KTmFtZSB0aGUgZGF0YS5mcmFtZXMgYGRhdGFfZmAsIGBkYXRhX21gLCBgZGF0YV9iYC4NCg0KYGBge3J9DQpjb3VudHJ5X2NvZGUgPC0gbGlzdChmcj0nRlJBQ05QJywNCiAgICAgICAgICAgICAgICAgICAgIGJlPSdCRUwnLA0KICAgICAgICAgICAgICAgICAgICAgZ2I9J0dCUlRFTlcnLA0KICAgICAgICAgICAgICAgICAgICAgbmw9J05MRCcsDQogICAgICAgICAgICAgICAgICAgICBpdD0nSVRBJywNCiAgICAgICAgICAgICAgICAgICAgIHN3ZT0nU1dFJywNCiAgICAgICAgICAgICAgICAgICAgIHNwPSdFU1AnLA0KICAgICAgICAgICAgICAgICAgICAgdXM9J1VTQScpDQoNCmNvdW50cnkgPC0gJ2ZyJw0KDQp3d19JIDwtIDE5MTM6MTkyMQ0KI3d3X0kgPC0gMTkzODoxOTQ2ICMgKFVTKQ0KYGBgDQoNCmBgYHtyfQ0KIyBUT0RPOg0KZGF0YV9mID0gcmVhZHI6OnJlYWRfZGVsaW0ocGFzdGUoIkxJRkVfVEFCTEVTLyIsY291bnRyeV9jb2RlW2NvdW50cnldLCIuZmx0cGVyXzF4MS50eHQiLHNlcD0iIiksIGRlbGltPSIgIiwgc2tpcCA9IDIpDQpkYXRhX20gPSByZWFkcjo6cmVhZF9kZWxpbShwYXN0ZSgiTElGRV9UQUJMRVMvIixjb3VudHJ5X2NvZGVbY291bnRyeV0sIi5tbHRwZXJfMXgxLnR4dCIsc2VwPSIiKSwgZGVsaW09IiAiLCBza2lwID0gMikNCmRhdGFfYiA9IHJlYWRyOjpyZWFkX2RlbGltKHBhc3RlKCJMSUZFX1RBQkxFUy8iLGNvdW50cnlfY29kZVtjb3VudHJ5XSwiLmJsdHBlcl8xeDEudHh0IixzZXA9IiIpLCBkZWxpbT0iICIsIHNraXAgPSAyKQ0KDQpgYGANCg0KRm9yIGVhY2ggbGlmZSB0YWJsZSwgZWFjaCByb3cgaXMgaWRlbnRpZmllZCBieSBgWWVhcmAgYW5kIGBBZ2VgLg0KUmVhZCB0aGUgZG9jdW1lbnRhdGlvbiBhbmQgY29uY2lzZWx5IGV4cGxhaW4gdGhlIG1lYW5pbmcgb2YgY29sdW1ucw0KDQpDaGVjayBvbiBbaHR0cDovL3d3dy5tb3J0YWxpdHkub3JnXShodHRwOi8vd3d3Lm1vcnRhbGl0eS5vcmcpIHRoZSBtZWFuaW5nIG9mIHRoZSBkaWZmZXJlbnQgY29sdW1uczoNCg0KYG14YA0KOiBDZW50cmFsIGRlYXRoIHJhdGUgYmV0d2VlbiBhZ2VzIHggYW5kIHgrbiB3aGVyZSBuPTEsIDQsIDUsIG9yIOKIniAob3BlbiBhZ2UgaW50ZXJ2YWwpDQoNCmBxeGANCjogUHJvYmFiaWxpdHkgb2YgZGVhdGggYmV0d2VlbiBhZ2VzIHggYW5kIHgrbg0KDQpgYXhgDQo6IEF2ZXJhZ2UgbGVuZ3RoIG9mIHN1cnZpdmFsIGJldHdlZW4gYWdlcyB4IGFuZCB4K24gZm9yIHBlcnNvbnMgZHlpbmcgaW4gdGhlIGludGVydmFsDQoNCmBseGANCjogTnVtYmVyIG9mIHN1cnZpdm9ycyBhdCBleGFjdCBhZ2UgeCwgYXNzdW1pbmcgbCgwKSA9IDEwMCwwMDANCg0KYGR4YA0KOiBOdW1iZXIgb2YgZGVhdGhzIGJldHdlZW4gYWdlcyB4IGFuZCB4K24NCg0KYGV4YDoNCjogTGlmZSBleHBlY3RhbmN5IGF0IGV4YWN0IGFnZSB4IChpbiB5ZWFycykNCg0KLSBXaGF0IGlzIHRoZSBjbGFzcyBvZiBgZGF0YV9iLCAuLi5gPw0KLSBJbnNwZWN0IGBkYXRhX2ZgIHVzaW5nIGBnbGltcHNlYC4NCg0KYGBge3J9DQojIFRPRE86DQojY2xhc3MoZGF0YV9iKQ0KZ2xpbXBzZShkYXRhX2YpDQoNCnY9YygpDQpmb3IgKGkgaW4gMTpuY29sKGRhdGFfYikpew0KICB2PWModiwoaXMubmEoZGF0YV9iWyxpXSkpKQ0KfQ0KDQpgYGANCg0KV2hpY2ggY29sdW1ucyBuZWVkcyByZXR5cGluZz8NCjogVE9ETzoNCndlIHJldHlwZWQgYWxsIHRoZSBjb2x1bW5zOg0KIC0gWWVhciwgbHgsIGR4LCBMeCwgVHggYXMgaW50ZWdycywNCiAtIG14LCBxeCwgYXgsIGV4IGFzIGRvdWJsZXMNCiAtIEFnZSBhcyBmYWN0b3IgYmVjYXVzZSBpdCBjb250YWluZWQgdGhlIHZhbHVlICcxMTArJyB3aGljaCBjb3VsZG4ndCBjb252ZXJ0IGFzIGEgbnVtZXJpYy4NCg0KIyMgTGlmZSB0YWJsZSBjbGVhbmluZw0KDQpSZW1vdmUgd2hpdGUgc3BhY2VzIGZyb20gY29sdW1uIG5hbWVzLiBZb3UgbWF5IGZpbmQgdXNlZnVsIGZ1bmN0aW9ucyBpbiBwYWNrYWdlIGBzdHJpbmdyYC4NClRyeSB0byBmb2xsb3cgdGhlICoqRFJZKiogcHJpbmNpcGxlIChEb24ndCBSZXBlYXQgWW91cnNlbGYpLg0KWW91IG5lZWQgdG8gcGVyZm9ybSB0aGUgc2FtZSBvcGVyYXRpb24gb24gZXZlcnkgY29sdW1uIG5hbWUuDQoNCllvdSBtYXkgdXNlIGZvbmN0aW9uYWwgcHJvZ3JhbW1pbmcgKHVzaW5nIGBwdXJycjo6YCBvciBgcGx5cjo6YCkNCnRvIHByb2Nlc3MgYWxsIGNvbHVtbiBuYW1lcyBvZiBgZGF0YV94eHhgIHVzaW5nIG9uZSBleHByZXNzaW9uLg0KU29tZSB2ZXJicyBpbiBgZHBseXI6OmAgcHJvdmlkZSB5b3Ugd2l0aCBzaG9ydGN1dHMuV3JpdGUgYSBmdW5jdGlvbiBgcmV0eXBlYCB0aGF0IGNhbiB0aWR5IGRhdGEuZnJhbWVzDQp3aXRoIHRoZSBzYW1lIHNjaGVtYSBhcyBgZGF0YV94eHhgIChjbGVhbmluZyBjb2x1bW4gbmFtZXMgaWYgbmVjZXNzYXJ5LCBjYXN0aW5nDQpzb21lIGNvbHVtbnMgdG8gYG51bWVyaWNgLCBvdGhlcnMgdG8gYGRvdWJsZWApLg0KDQpgYGB7cn0NCnJldHlwZSA8LSBmdW5jdGlvbihkYXRhKXsNCiAgbmFtZXMoZGF0YSkgJT4lDQogIHN0cmluZ3I6OnN0cl9yZXBsYWNlX2FsbCguLCAnICcsICcnKSAtPiBuYW1lcyhkYXRhKQ0KICBzdHJpbmdyOjpzdHJfcmVwbGFjZV9hbGwoZGF0YSRBZ2UsICcgJywnJykgLT4gZGF0YSRBZ2UNCg0KICBkYXRhICU+JQ0KICAgIGRwbHlyOjptdXRhdGVfYXQodmFycyhteCwgcXgsIGF4LCBleCksIGFzLmRvdWJsZSkgJT4lDQogICAgZHBseXI6Om11dGF0ZV9hdCh2YXJzKFllYXIsIGx4LCBkeCwgTHgsIFR4KSwgYXMuaW50ZWdlcikgJT4lDQogICAgZHBseXI6Om11dGF0ZV9hdCh2YXJzKEFnZSksIGZvcmNhdHM6OmFzX2ZhY3RvcikgLT4gZGF0YQ0KICBkYXRhDQp9DQoNCg0KYGBgDQoNClVzZWZ1bCB0b29sczoNCg0KLSBgZHBseXI6Om11dGF0ZV9hdGANCi0gYGRwbHlyOjpyZW5hbWVgDQotIGBkcGx5cjo6cmVuYW1lYEFwcGx5IGZ1bmN0aW9uIGByZXR5cGVgIHRvIHRoZSB0aHJlZSBkYXRhLmZyYW1lcy4NCg0KYGBge3J9DQojIFRPRE86DQoNCmNvdW50X25hIDwtIGZ1bmN0aW9uKGRhdGEpew0KICBkYXRhICU+JQ0KICAgIGRwbHlyOjpzdW1tYXJpc2VfYWxsKC5mdW5zID0gfnN1bShpcy5uYSguKSkpLT4gcmVzDQogIHJlcw0KfQ0KDQpyZXR5cGUoZGF0YV9mKSAtPiBkYXRhX2YNCnJldHlwZShkYXRhX20pIC0+IGRhdGFfbQ0KcmV0eXBlKGRhdGFfYikgLT4gZGF0YV9iDQoNCmdsaW1wc2UoZGF0YV9mKQ0KDQojY291bnRfbmEoZGF0YV9mKQ0KDQpgYGANCg0KIyBIYXphcmQgcmF0ZXMsIG1vcnRhbGl0eSBxdW90aWVudHMNCg0KUGxvdCBtb3J0YWxpdHkgcXVvdGllbnRzIChjb2x1bW4gYG14YCkgZm9yIHdvbWVuIGFzIGEgZnVuY3Rpb24gb2YgYEFnZWAgZm9yIHllYXJzIGAxOTEzYCB1cCB0byBgMTkyMWAuDQpVc2UgYWVzdGhldGljcyB0byBkaXN0aW5ndWlzaCB5ZWFycy4gWW91IHdpbGwgbmVlZCB0byBjYXRlZ29yaXplIHRoZSBgWWVhcmAgY29sdW1uDQooYGZvcmNhdHM6OmAgbWF5IGJlIGhlbHBmdWwpLg0KDQpQYXkgYXR0ZW50aW9uIHRvIGF4ZXMgbGFiZWxzLCB0byBsZWdlbmRzLiBBc3Nlc3MgbG9nYXJpdGhtaWMgc2NhbGVzLg0KDQpgYGB7cn0NCiMgVE9ETzoNCnBhY21hbjo6cF9sb2FkKHZpcmlkaXMpDQpwIDwtIGRhdGFfZiAlPiUNCiAgZmlsdGVyKFllYXIgJWluJSB3d19JKSAlPiUNCiAgZ2dwbG90KG1hcHBpbmc9YWVzKHg9QWdlLCB5PW14KSkgKw0KICBnZW9tX3BvaW50KGFlcyhjb2xvdXIgPSBmb3JjYXRzOjphc19mYWN0b3IoWWVhcikpLCBzaXplID0gLjUpICsNCiAgc2NhbGVfeF9kaXNjcmV0ZShicmVha3MgPSBkYXRhX2YkQWdlW3NlcSgxLDExMSwgYnkgPSAxMCldKSArDQogIHNjYWxlX3lfbG9nMTAoKSArDQogIHhsYWIoIkFnZSIpKw0KICB5bGFiKCJtb3J0YWxpdHkgcXVvdGllbnRzIGZvciB3b21lbiIpICsNCiAgbGFicyhjb2xvdXIgPSAiWWVhcnMiKSANCg0KcHJpbnQocCkNCmBgYA0KDQpQbG90IG1vcnRhbGl0eSBxdW90aWVudHMgKGNvbHVtbiBgbXhgKSBmb3IgbWVuIGFzIGEgZnVuY3Rpb24gb2YgYEFnZWAgZm9yIHllYXJzIGAxOTEzYCB1cCB0byBgMTkyMWAuDQoNCk5vdGUgdGhhdCB5b3UgbWF5IHR3ZWFrIHRoZSBgZ2dwbG90YCBvYmplY3QgeW91IGp1c3QgY3JlYXRlZCBhbmQgZmVlZCBpdCB3aXRoIG5ldyBkYXRhDQp1c2luZyBgJSslYCBmcm9tIGBnZ3Bsb3RgLg0KDQpgYGB7cn0NCiMgVE9ETzoNCnAgJSslDQogIGZpbHRlcihkYXRhX20sIFllYXIgJWluJSB3d19JKSArDQogIHlsYWIoIm1vcnRhbGl0eSBxdW90aWVudHMgZm9yIG1lbiIpIA0KYGBgDQoNCiMjIEZhY2V0dGluZw0KDQpCdWlsZCBhIGRhdGEuZnJhbWUgY2FsbGVkIGBiaWdfZGF0YWAsIHdoZXJlIHJvd3MgYXJlDQppZGVudGlmaWVkIGJ5IGBZZWFyLCBBZ2UsIFNleGAgYW5kIGNvbWVzIGVpdGhlcg0KZnJvbSBgZGF0YV9mYCBvciBgZGF0YV9tYC4gQ29sdW1uIGBTZXhgIHNob3VsZCBiZSBhIGBmYWN0b3JgDQp3aXRoIHR3byBsZXZlbHMgY2FsbGVkIGBNYWxlYCBhbmQgYEZlbWFsZWAuDQoNCllvdSBtYXkgcHJvY2VlZCBhcyBmb2xsb3dzOi0gQWRkIGEgY2hhcmFjdGVyIGNvbHVtbiAiU2V4IiB0byBgZGF0YV9mYCBhbmQgYGRhdGFfbWAuDQoNCi0gU3RhY2sgdGhlIHR3byBkYXRhLmZyYW1lcyAodXNpbmcgYHJiaW5kYCkgaW50byBkYXRhLmZyYW1lIG5hbWVkIGBiaWdfZGF0YWAuDQotIENhc3QgY29sdW1uIGBTZXhgIGFzIGEgZmFjdG9yLg0KDQpgYGB7cn0NCiMgVE9ETzoNCmRhdGFfbSRTZXggPC0gIm1hbGUiDQpkYXRhX2YkU2V4IDwtICJmZW1hbGUiDQpiaWdfZGF0YSA9IHJiaW5kKGRhdGFfZiwgZGF0YV9tKQ0KYmlnX2RhdGElPiUNCiAgZHBseXI6Om11dGF0ZShTZXggPSBmb3JjYXRzOjphc19mYWN0b3IoU2V4KSkgLT4gYmlnX2RhdGENCg0KZ2xpbXBzZShiaWdfZGF0YSkNCmBgYA0KDQpQbG90IG1vcnRhbGl0eSBxdW90aWVudHMgKGNvbHVtbiBgbXhgKSBhcyBhIGZ1bmN0aW9uIG9mIGBBZ2VgIGZvcg0KeWVhcnMgYDE5MTNgIHVwIHRvIGAxOTIxYCBmYWNldCBhY2NvcmRpbmcgdG8gYFNleGAuDQoNCmBgYHtyfQ0KIyBUT0RPOg0KcCAlKyUNCiAgZmlsdGVyKGJpZ19kYXRhLCBZZWFyICVpbiUgd3dfSSkgKyANCiAgZmFjZXRfd3JhcCh2YXJzKFNleCkpICsNCiAgeWxhYigibW9ydGFsaXR5IHF1b3RpZW50cyIpIA0KDQpgYGANCg0KDQpNYXAgYFNleGAgdG8gc29tZSBhZXN0aGV0aWNzIGFuZCBmYWNldCBieSBgWWVhcmAuDQoNCmBgYHtyfQ0KIyBUT0RPOg0KDQpiaWdfZGF0YSAlPiUNCiAgZmlsdGVyKFllYXIgJWluJSB3d19JKSAlPiUNCiAgZ2dwbG90KG1hcHBpbmc9YWVzKHg9QWdlLCB5PW14KSkgKw0KICBmYWNldF93cmFwKHZhcnMoWWVhcikpICsgDQogIGdlb21fcG9pbnQoYWVzKGNvbG91ciA9IFNleCksIHNoYXBlID0gJysnLCBzaXplID0gMikrDQogIHNjYWxlX3hfZGlzY3JldGUoYnJlYWtzID0gYmlnX2RhdGEkQWdlW3NlcSgxLDExMSwgYnkgPSAyMCldKSArDQogIHNjYWxlX3lfbG9nMTAoKSArDQogIHhsYWIoIkFnZSIpKw0KICB5bGFiKCJtb3J0YWxpdHkgcXVvdGllbnRzIikgDQoNCmBgYA0KDQpMaXN0IHB1enpsaW5nIGZlYXR1cmVzIG9uIHRob3NlIHBsb3RzLg0KOiBUT0RPOg0KRnJvbSAxOTE0IHRvIDE5MTkgd2Ugb2JzZXJ2ZWQgYSBzdXJnZSBpbiBtb3J0YWxpdHkgZm9yIG1hbGVzIGFnZWQgYmV0d2VlbiAyMCBhbmQgNTAgeWVhcnMgY29tcGFyZWQgdG8gZmVtYWxlcy4NCkFsc28gaW4gMTkxOCBhbmQgaW4gYSBsZXNzZXIgZXh0ZW50IDE5MTkgdGhlcmUgd2FzIGEgcmlzZSBpbiBmZW1hbGUgbW9ydGFsaXR5IHJhdGVzLg0KDQpEbyB5b3UgaGF2ZSBjbHVlcyBhYm91dCB0aG9zZSBwdXp6bGluZyBhc3BlY3RzPw0KOiBUT0RPOg0KDQpUaGUgRmlyc3Qgd29ybGQgd2FyIGNhbiBleHBsYWluIHRoZSByaXNlIGluIG1vcnRhbGl0eSByYXRlcyBhbmQgdG8gYSBsZXNzZXIgZXh0ZW50IHRoZSBzcGFuaXNoIGZsdSBpbiAxOTE4LzE5MTkuDQoNCiMgVHJlbmRzDQoNCiMjIEluZmFudCBtb3J0YWxpdHkgcmF0ZVBsb3QgbW9ydGFsaXR5IHF1b3RpZW50cyBhdCBhZ2VzICQwLCAxLCA1JCBhcyBhIGZ1bmN0aW9uIG9mIHRpbWUuDQpEaXN0aW5ndWlzaCB3b21lbiBhbmQgbWVuLg0KDQpgYGB7cn0NCmFnZXMgPC0gYygwLCAxLCA1KQ0KIyBUT0RPOg0KYWdlcw0KbXhfYnlfYWdlIDwtIGJpZ19kYXRhICU+JQ0KICBmaWx0ZXIoQWdlICVpbiUgYWdlcykgJT4lDQogIGdncGxvdChtYXBwaW5nPWFlcyh4PVllYXIsIHk9bXgpKSArDQogIGdlb21fcG9pbnQoYWVzKGNvbG91ciA9IFNleCkgLCBzaXplID0gMSkgKw0KICBzY2FsZV95X2xvZzEwKCkgKw0KICBmYWNldF93cmFwKHZhcnMoQWdlKSkgICsNCiAgeWxhYigibW9ydGFsaXR5IHF1b3RpZW50cyIpIA0KDQpteF9ieV9hZ2UNCg0KYGBgDQoNCkNhbiB5b3UgbWF0Y2ggYWJydXB0IGNoYW5nZXMgYW5kIGhpc3RvcmljYWwgZXZlbnRzPw0KOiBUT0RPOg0KDQp3ZSBjYW4gYXNzb2NpYXRlIHRoZSBkcm9wIGluIGluZmFudCBtb3J0YWxpdHkgcmF0ZXMgdG8gdGhlIGFkdmFuY2VzIG9mIG1vZGVybiBtZWRpY2luZSAoZS5nLiA6IHZhY2NpbmF0aW9uKQ0KDQojIyBBcyB0aW1lcyBnb2VzIGJ5UGxvdCBtb3J0YWxpdHkgcXVvdGllbnRzIGF0IGFnZXMgJDE1LCAyMCwgNDAsIDYwJCBhcyBhIGZ1bmN0aW9uIG9mIHRpbWUNCg0KRGlzdGluZ3Vpc2ggd29tZW4gYW5kIG1lbi4NCg0KTm90ZSBhZ2FpbiB0aGF0IHlvdSBtYXkgdHdlYWsgdGhlIGBnZ3Bsb3RgIG9iamVjdCB5b3UganVzdCBjcmVhdGVkIGFuZCBmZWVkIGl0IHdpdGggbmV3IGRhdGENCnVzaW5nIGAlKyVgIGZyb20gYGdncGxvdGAuDQoNCmBgYHtyfQ0KYWdlcyA8LSBjKDE1LCAyMCwgNDAsIDYwKQ0KDQojIFRPRE86DQpteF9ieV9hZ2UgJSslDQogIGZpbHRlcihiaWdfZGF0YSwgQWdlICVpbiUgYWdlcykgDQpgYGANCg0KVE9ETzoNCjogTGlzdCBwdXp6bGluZyBmZWF0dXJlcw0KDQp3ZSBjYW4gc2VlIGFicnVwdCByaXNlcyBpbiBtb3J0YWxpdHkgY29ycmVzcG9uZGluZyB0byBtYWpvciB3YXJzIGluIGZyYW5jZSA6IDE4NzAsIDE5MTQtMTkxOCwgMTk0MHMgc3BlY2lmaWNhbGx5IDIwIGFuZCA0MCB5ZWFyLW9sZCBtYWxlcy4NCg0KDQojIyBNb3J0YWxpdHkgcXVvdGllbnRzDQoNCi0gUGxvdCBtb3J0YWxpdHkgcXVvdGllbnQgYXMgYSBmdW5jdGlvbiBvZiBhZ2UgZm9yIHllYXJzICQxODI1LCAxODUwLCAxODc1LCBcbGRvdHMsIDIwMDAkLCBmYWNldCB3aXRoIHJlc3BlY3QgdG8gYFNleGANCi0gQ29tcGFyZSBkaWZmZXJlbnQgc2NhbGVzIChsb2dhcml0aG1pYyBvciBsaW5lYXIpIG9uIHRoZSBkaWZmZXJlbnQgYXhlcw0KDQpgYGB7cn0NCnllYXJzIDwtIHNlcSgxODI1LCAyMDAwLCBieSA9IDI1KQ0KDQojIFRPRE86DQoNCnAgJSslDQogIGZpbHRlcihiaWdfZGF0YSwgWWVhciAlaW4lIHllYXJzKSArDQogIGZhY2V0X3dyYXAodmFycyhTZXgpKQ0KDQpgYGANCg0KIyBSZWFycmFuZ2VtZW50DQoNCkZyb20gZGF0YS5mcmFtZSBgZGF0YV9tLCBkYXRhX2ZgLCBleHRyYWN0IGEgbnVtZXJpY2FsIG1hdHJpeCBgQWAgd2hlcmUgcm93cyBjb3JyZXNwb25kIHRvIHllYXIgKHNheSBgdGApLCBjb2x1bW5zIHRvIGFnZSAoc2F5IGB4YCksIGFuZCBlbnRyeQ0KZm9yIHllYXIgYHRgIGFuZCBhZ2UgYHhgIGlzIHRoZSBtb3J0YWxpdHkgcXVvdGllbnQgYXQgYWdlIGB4YCBmb3IgeWVhciBgdGAuIEZpbmFsbHksIHdlIHRha2UgbG9nYXJpdGhtczogJEFfe3QseH0gPSBcbG9nIG1fe3QseH0kLg0KDQpZb3UgbWF5IHVzZSBmdW5jdGlvbnMgYHBpdm90X3dpZGVyYCwgYHBpdm90X2xvbmdlcmAgZnJvbSBgdGlkeXI6OmAgcGFja2FnZS4NCg0KYGBge3J9DQojIFRPRE86DQoNCmNvbnZfdG9fQSA8LSBmdW5jdGlvbihkYXRhKXsNCiAgZGF0YSAlPiUgDQogICAgc2VsZWN0KEFnZSwgbXgsIFllYXIpICU+JSANCiAgICB0aWR5cjo6cGl2b3Rfd2lkZXIobmFtZXNfZnJvbSA9IEFnZSwgdmFsdWVzX2Zyb20gPSBteCkgJT4lDQogICAgcmVtb3ZlX3Jvd25hbWVzICU+JSANCiAgICBjb2x1bW5fdG9fcm93bmFtZXModmFyPSJZZWFyIikgLT4gQV8NCiAgICBkYXRhLm1hdHJpeChBXykNCn0NCg0KQV9tIDwtIGNvbnZfdG9fQShkYXRhX20pDQpBX2YgPC0gY29udl90b19BKGRhdGFfZikNCg0KDQpgYGANCg0KPiBGYWN0b3JpemF0aW9ucyBvZiAkQSQgcGxheSBhIHNpZ25pZmljYW50IHJvbGUgaW4gZGVtb2dyYXBoaWMgbW9kZWxpbmcuIE1vcmUgb24gdGhpcyB0b3BpYyBpbiBQQ0EgY2hhcHRlci4NCg0KIyBMaWZlIGV4cGVjdGFuY3kNCg0KV3JpdGUgYSBmdW5jdGlvbiB0aGF0IHRha2VzIGFzIGlucHV0IGEgdmVjdG9yIG9mIG1vcnRhbGl0eSBxdW90aWVudHMsIGFzIHdlbGwgYXMgYW4gYWdlLCBhbmQgcmV0dXJucyB0aGUgcmVzaWR1YWwgbGlmZSBleHBlY3RhbmN5IGNvcnJlc3BvbmRpbmcgdG8gdGhlIHZlY3RvciBhbmQgdGhlIGdpdmVuIGFnZS4NCg0KDQpgYGB7cn0NCiMgVE9ETzoNCnJleCA8LSBmdW5jdGlvbihteCwgYWdlKXsNCiAgc3VtKGN1bXByb2QoMS10YWlsKG14LCBsZW5ndGgobXgpLWFnZSkpKSAgDQp9DQoNCmBgYA0KDQpXcml0ZSBhIGZ1bmN0aW9uIHRoYXQgdGFrZXMgYXMgaW5wdXQNCmEgX2xpZmUgdGFibGVfIGFuZCByZXR1cm5zIGEgbWF0cml4ICRFJCB3aGVyZSByb3dzIGNvcnJlc3BvbmQgdG8gYFllYXJgDQphbmQgY29sdW1ucyB0byBgQWdlYCB3aXRoICRFX3t0LHh9JCBlcXVhbCB0byB0aGUgcmVzaWR1YWwgbGlmZSBleHBlY3RhbmN5IGF0IGFnZSAkeCQgZm9yIHllYXIgJHQkLg0KDQpgYGB7cn0NCiMgVE9ETzoNCmZ1bGxfcmV4IDwtIGZ1bmN0aW9uKGx0KQ0Kew0KICByZXR5cGUobHQpIC0+IGx0DQogIGNvbnZfdG9fQShsdCkgLT4gQQ0KICANCiAgRSA8LSBtYXRyaXgoMEwsIG5yb3cgPSBkaW0oQSlbMV0sIG5jb2wgPSBkaW0oQSlbMl0pDQogIGNvbG5hbWVzKEUpIDwtIGNvbG5hbWVzKEEpDQogIHJvd25hbWVzKEUpIDwtIHJvd25hbWVzKEEpDQogIA0KICBmb3IgKGkgaW4gMTpucm93KEEpKQ0KICAgIHsNCiAgICBmb3IoYWdlIGluIDA6bmNvbChBKS0xKQ0KICAgICAgew0KICAgICAgICBFW2ksIGFnZSsxXSA8LSByZXgoQVtpLF0sIGFnZSkNCiAgICAgIH0NCiAgICB9DQogIEUNCn0NCg0KZGF0YV9mMiA9IHJlYWRyOjpyZWFkX2RlbGltKHBhc3RlKCJMSUZFX1RBQkxFUy8iLGNvdW50cnlfY29kZVtjb3VudHJ5XSwiLmZsdHBlcl8xeDEudHh0IixzZXA9IiIpLCBkZWxpbT0iICIsIHNraXAgPSAyKQ0KDQpmdWxsX3JleChkYXRhX2YyKS0+RV9mDQoNCmdsaW1wc2UoRV9mKQ0KDQpgYGANCg0KUGxvdCByZXNpZHVhbCBsaWZlIGV4cGVjdGFuY3kgYXMgYSBmdW5jdGlvbiBvZiBgWWVhcmAgYXQgYWdlcyAkNjAkIGFuZCAkNjUkLg0KWW91IG1heSBwcm9jZWVkIGJ5IGZpcnN0IHBlcmZvcm1pbmcgYWdncmVnYXRpb24gb24gYGRhdGFfLi4uYCAoZ3JvdXBpbmcgYnkgYFllYXJgKSwNCmFuZCB0aGVuIGNvbXB1dGUgcmVzaWR1YWwgbGlmZSBleHBlY3RhbmN5IGF0IGRpZmZlcmVudCBhZ2VzDQpieSBzbGljaW5nIHRoZSBgbXhgIGNvbHVtbi4gUmVjYWxsIHRoYXQgd2hlbiBtYXBwaW5nIGhhemFyZCByYXRlIHRvDQpyZXNpZHVhbCBsaWZlIGV4cGV4dGFuY3ksIHRoZSBvcmRlciBvZiBtdWx0aXBsaWNhdGlvbnMgbWF0dGVycy4gSG93IGNvdWxkIHlvdSBzZWN1cmUNCnlvdXIgY29tcHV0YXRpb24gc28gdGhhdCBpdCBzdGlsbCB3b3JrcyBpZiB0aGUgcm93cyBvZiBgZGF0YV8uLi5gIGFyZSBzaHVmZmxlZCA/DQoNCkZ1bmN0aW9uIGB0aWR5cjo6cGl2b3RfbG9uZ2VyYCBtYXkgaGVscC4NCg0KYGBge3J9DQojIFRPRE86DQphZ2VzIDwtIGMoNjAsIDY1KQ0KDQpyZSA8LSBkYXRhX2YgJT4lIA0KICBmaWx0ZXIoYXMubnVtZXJpYyhBZ2UpID4gNjApICU+JQ0KICBmdWxsX3JleCgpICU+JQ0KICBkYXRhLmZyYW1lKCkNCg0KbmFtZXMocmUpIDwtIGxldmVscyhkYXRhX2YkQWdlKVs2MTpsZW5ndGgobGV2ZWxzKGRhdGFfZiRBZ2UpKV0NCg0KcmUgJT4lIA0KICByb3duYW1lc190b19jb2x1bW4odmFyID0gIlllYXIiKSAtPiByZQ0KDQpyZSAlPiUNCiAgcGl2b3RfbG9uZ2VyKC1ZZWFyLCBuYW1lc190byA9ICJBZ2UiLCB2YWx1ZXNfdG8gPSAicmV4IikgJT4lDQogIGZpbHRlcihBZ2UgJWluJSBhZ2VzKSAlPiUNCiAgZ2dwbG90KG1hcHBpbmcgPSBhZXMoeCA9IFllYXIsIHkgPSByZXgpKSArIA0KICBnZW9tX3BvaW50KGFlcyhjb2xvdXIgPSBBZ2UpKSArIA0KICBzY2FsZV94X2Rpc2NyZXRlKGJyZWFrcyA9IHJlJFllYXJbc2VxKDUsMjAyLCBieSA9IDUwKV0pICsNCiAgZmFjZXRfd3JhcCh+IEFnZSkNCg0KYGBgDQoNCg0KIyBSZWZlcmVuY2VzDQoNCi0gW0h1bWFuIE1vcnRhbGl0eSBEYXRhYmFzZV0oaHR0cHM6Ly93d3cubW9ydGFsaXR5Lm9yZykNCi0gW1RhYmxlcyBkZSBtb3J0YWxpdMOpIGZyYW7Dp2Fpc2VzLCBKYWNxdWVzIFZhbGxpbiBldCBGcmFuY2UgTWVzbMOpXShodHRwczovL3d3dy5saWZldGFibGUuZGUvZGF0YS9GUkEvRlJBMDAwMDE4MDYxOTk3Q1kxLnBkZikNCg==</div>
 
 
 
