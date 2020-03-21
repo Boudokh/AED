@@ -78,6 +78,7 @@ qplot(x=seq_along(sv), y=sv, geom="col",xlab ="rank", ylab="singular values")+
 
 
 ```{r}
+pacman::p_load(corpcor)
 #QR decomposition :
 
 Z_QR = qr(Z)
