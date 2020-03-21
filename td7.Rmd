@@ -78,16 +78,17 @@ qplot(x=seq_along(sv), y=sv, geom="col",xlab ="rank", ylab="singular values")+
 
 
 ```{r}
-pacman::p_load(corpcor)
+#QR decomposition :
+
 Z_QR = qr(Z)
 Q <- qr.Q(Z_QR)
 R <- qr.R(Z_QR)
+#qr.solve(Z_QR,Y)
 #Q
 
 #pseudo-inverse :
 pseudoinverse(as.matrix(Z))
-#piv(Z)
-qr.solve(Z_QR,Y)
+
 
 
 ```
