@@ -398,7 +398,7 @@ Comment.
 ```{r}
 # TODO
 
-stepAIC(df2.aov, scope = list(upper=formulas[[10]], lower=formulas[[1]]))
+stepAIC(df2_updated, scope = list(upper=formulas[[10]], lower=formulas[[1]]))
 
 ```
 
