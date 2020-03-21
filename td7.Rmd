@@ -28,7 +28,7 @@ require(tidyverse)
 ```
 
 ```{r}
-set.seed(1515)  # pick your student number instead of 1515
+set.seed(21504397)  # pick your student number instead of 1515
 
 n <- 1000
 p <- 10
@@ -80,7 +80,11 @@ qplot(x=seq_along(sv), y=sv, geom="col",xlab ="rank", ylab="singular values")+
 ```{r}
 pacman::p_load(corpcor)
 Z_QR = qr(Z)
-#qr.Q(Z_QR)
+Q <- qr.Q(Z_QR)
+R <- qr.R(Z_QR)
+#Q
+
+#pseudo-inverse :
 pseudoinverse(as.matrix(Z))
 #piv(Z)
 qr.solve(Z_QR,Y)
@@ -150,21 +154,60 @@ Comment the output of `summary(.)`
 # TODO
 summary(lm.0)
 
-# We want our t-value coefficient to be far away from zero as this would indicate we could reject the null hypothesis. In our example, the t-statistic values are relatively close to zero. So, we cannot reject the null hypothesis.
-
-#A small p-value indicates that it is unlikely we will observe a relationship between the predictor and response variables due to chance. Typically, a p-value of 5% or less is a good cut-off point. In our example, the p-values are not very close to zero. Consequently, we cannot reject the null hypothesis for x1 to x9.
 
 ```
 
 - Provide an interpretation of each $t$ value 
+The coefficient t-value is a measure of how many standard deviations our coefficient estimate is far away from 0.
+The value $|t|$ is high when the `Std. Error` is low. So the bigger the value $|t|$ is the bigger the correlation between $x$ and $y$.
+We want our t-value coefficient to be far away from zero as this would indicate we could reject the null hypothesis. In our example, the t-statistic values are relatively close to zero. So, we cannot reject the null hypothesis.
+
 - Provide an interpretation of `Pr(>|t|)`
+
+The Pr(>t) acronym found in the model output relates to the probability of observing any value equal or larger than t. A small p-value indicates that it is unlikely we will observe a relationship between the predictor and response variables due to chance.
+In our example, the p-values are not very close to zero. Consequently, we cannot reject the null hypothesis for x1 to x9.
+
 - Explain why the `Residual standard error` has `990` degrees of freedom. 
-- How is `Residual standard error` computed? 
+
+We have a sample of 1000 observations and 10 variables so 1000 - 10 = 990 = degrees of freedom.
+The coefficient Standard Error measures the average amount that the coefficient estimates vary from the actual average value of our response variable, which means that 10 residuals can be deduced if we have the other 990.
+
+- How is `Residual standard error` computed? .
+With `SSR`, the sum of squared residuals, and `d.f` = 990 the degree of freedom, we have :
+
+`Residual standard error` $= \sqrt{\frac{SSR}{d.f}}$
+
 - What is `Residual standard error` supposed to estimate?
-- Is it an unbiased estimator? 
+
+The `Residual standard error` measures the average amount that the coefficient estimates vary from the actual average value of our response variable. We’d ideally want a lower number relative to its coefficients.
+(écart-type)
+
+- Is it an unbiased estimator?  Yes, it is.
+
 - What is `Multiple R-squared` ?
+
+SSR = the sum of the squared residuals
+SST = the total sum of the squares 
+
+`Multiple R-squared` $= 1 - \frac{SSR}{SST}$
+
+This quantity is a statistic. If it is close to 1, we can say that the model is adequate to the observations.  
+
 - What is `Adjusted R-squared` ?
+
+The Adjusted R-squared includes a term that penalizes a model for each additional explanatory variable :
+v = number of explanatory variables
+
+`Adjusted R-squared` $= 1 - \frac{SSR}{SST}*\frac{n-1}{n-v-1}$
+
 - How do you reconcile the values of `Pr(>|t|)`  and the `p-value` of the `F-statistic`
+
+F-statistic is a good indicator of whether there is relationship between our predictor variables and the response variable. 
+If our F-statistic is significant, we can trust on the `R-squared` value more. 
+
+Here, our p-value is much less than 5% (<2.2e-16), so we can say that there is a significant relationship between the variables in the linear regression model of the dataset.
+
+
 
 Have a look at the body of `summary` method for class `lm` (`summary.lm`). 
 
@@ -199,6 +242,13 @@ to your observations. Comment summary.
 ```{r}
 # TODO: 
 lm00 <- lm(Y ~ -1, df)
+lm00
+summary(lm00)
+
+# Residuals are essentially the difference between the actual observed response values and the response values that the model predicted.
+#We should look for a symmetrical distribution across the summary points on the mean value zero. In our example, we can see that the distribution of the residuals do not appear to be strongly symmetrical. That means that the model predicts certain points that fall far away from the actual observed points. which tells us that there is a strong correlation between x0 and Y.
+
+
 ```
 
 Compare minimal model and full model with function `anova`. Comment.  
@@ -206,6 +256,9 @@ Compare minimal model and full model with function `anova`. Comment.
 ```{r}
 # TODO: 
 anova(lm00,lm.0)
+
+# We can see that for the full model, the p-value is very close to zero (3*), so this anova table tells us that there is good reason to use the full model over the minimal model.
+
 ```
 
 ## Variable selection 
@@ -246,12 +299,19 @@ Plot  sums of squared residuals as a function of order.
 ```{r}
 # TODO:
 
-df %>%
-  ggplot(aes(x=x0*x0,y=Y),xlab ="sums of squared residuals", ylab="order")+
-  geom_point(size=.5, alpha=.3)+
-  geom_line(mapping=aes(y=fitted(lm.0)),col="red")+
-  
+ss<-0
+for (i in 1:9) {
+  ss[i] <- sum(residuals(lms[[i]])^2)
+}
+
+ssr <- data.frame(order = c(1:9), values = ss)
+ssr %>%
+  ggplot(aes(x=order,y=values)) + xlab ("order")+ ylab("sums of squared residuals")+
+  geom_point(size=1.5, alpha=.8, col="red")+
+  #geom_line(mapping=aes(y=fitted(lm.0)),col="red")+
   ggtitle("Sums of squared residuals as a function of order.")
+
+
 
 ```
 
@@ -281,18 +341,17 @@ df2.aov <- aov(formulas[[10]], data = df2)
 
 summary(df2.aov)
 
-# @Mo, ici il faut faire aov(Y~xi) pour chaque xi qu'on a décidé de garder pcq il est utile
-# c'est lesquels qu'il faut garder je me rappelle plus comment on fait mais tu m'avais
-# expliqué ça au td6
+# we can see that with aov, there are more significantly close to zero p-values, comparing to summary(lm.0), which are x0, x1, x2 and x3.
 
-#♠une fois qu'on sait ça, on peut faire le reste avec <3
 ```
 
 Update `df2.aov` using function `update`. Drop `x5, x6, x7, x8, x9`
 
 ```{r}
 # TODO: 
-update(df2.aov, Y ~ix - x5 - x6 - x7 - x8 - x9)
+df2_updated <- update(df2.aov, . ~ . - x5 - x6 - x7 - x8 - x9)
+df2_updated
+
 ```
 
 Use function `dropterm` on full model with option `test = "F"` and without. 
@@ -302,6 +361,10 @@ Interpret in both cases.
 # TODO: 
 dropterm(df2.aov, scale = 0, test = "F")
 dropterm(df2.aov, scale = 0,k=2)
+
+#We clearly notice that with the option `test = "F"`, we have more information that can help us decide. Indeed, without this option, we have no information about the p-values, so we cannot know if they are close enough to zero or not.
+#In conclusion, we better use this function with the `test = "F"` option.
+
 ```
 
 ## Using `addterm` between minimal and full model
@@ -309,11 +372,8 @@ dropterm(df2.aov, scale = 0,k=2)
 
 ```{r}
 # TODO:
-addterm(df2, upper = ~ ., comp = 1:9,
-        aic = TRUE)
 
-dropterm(object, lower = ~ 1, comp = 1:9,
-         aic = TRUE, bestmodel = .)
+addterm(lm00,lm.0)
 ```
 
 ## Using `stepAIC()`
@@ -328,5 +388,6 @@ Comment.
 
 stepAIC(df2.aov, scope = list(upper=formulas[[10]], lower=formulas[[1]]))
 
-```
+# The model with just x0, x1, x2 and x3 and without the rest of the xi, is a pretty good model. So, we can only keep those.
 
+```
