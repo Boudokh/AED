@@ -48,8 +48,8 @@ We load the one-year lifetables for female, male and whole population for the di
 # params should be initialized from YAML header
 params<- list(
     timecourse= 1945:2015,
-    dirpath= '../LIFE_TABLES/lt_',
-    country_code= 'fr_t',
+    dirpath= 'LIFE_TABLES/lt_',
+    country_code= 'fr_c',
     country= 'France')
 ```
 
@@ -57,7 +57,7 @@ params<- list(
 timecourse <- eval(rlang::parse_expr(params$timecourse))
 ```
 
-```{r tidyverse, message=FALSE, warning=FALSE, echo=FALSE}
+```{r tidyverse, echo=FALSE, message=FALSE, warning=FALSE}
 pacman::p_load(tidyverse)
 pacman::p_load(plotly)
 pacman::p_load(foreach)
@@ -84,7 +84,7 @@ knitr::opts_chunk$set(eval=FALSE,
 
 
 ```{r, echo=FALSE}
-country_code <- list(fr_t='FRATNP',
+country_code <- list(#fr_t='FRATNP',
                      fr_c='FRACNP',
                      be='BEL',
                      gb_t='GBRTENW',
@@ -95,7 +95,7 @@ country_code <- list(fr_t='FRATNP',
                      sp='ESP',
                      us='USA')
 
-countries <- c('fr_t',  'gb_t',  'nl', 'it', 'sp', 'swe', 'us')
+countries <- c( 'gb_t',  'nl', 'it', 'sp', 'swe', 'us') #'fr_t', 
 
 country_names <- list(fr_t='France',     # total population
                      fr_c='France',      # civilian population
@@ -111,10 +111,73 @@ country_names <- list(fr_t='France',     # total population
 gender_names <- list('b'='Both',
                      'f'='Female',
                      'm'='Male')
+
+ 
+```
+
+
+```{r load_tabble, warning=FALSE, message=FALSE}
+
+dirpath <- 'LIFE_TABLES/lt_'    
+suffix <- 'ltper_1x1.txt'
+mid <- 'ltper_1x1/'
+
+foreach(country=iter(countries), .combine = c) %do% {
+  purrr::map2_chr(.x = c("both/b", "female/f", "male/m"),
+                  .y = c("b", "f", "m"),
+                  .f = ~ stringr::str_c(dirpath,
+                                  .x ,
+                                  mid,
+                                  country_code[[country]],
+                                  ".",
+                                  .y,
+                                  suffix))
+  }  -> file_paths
+
+df_names <- as.character(outer(c("b", "f", "m"),
+                  countries,
+                  FUN = function(s, c) stringr::str_c("data", s, c, sep="_")))
+
+out <- purrr::map(file_paths,
+                  ~ readr::read_delim(., delim = " ",
+                                      skip = 2,
+                                      col_names = TRUE))
+
+
+names(out) <-  df_names
+
+purrr::map2(.x = out,
+            .y=stringr::str_split(df_names, pattern = 'data_[m,f,b]_', simplify = TRUE)[,2],
+            ~ mutate(.x, Country=country_names[[.y]])) -> out
+
+purrr::map2(.x = out,
+            .y =stringr::str_split(df_names, pattern = '_', simplify = TRUE)[,2],
+            ~ mutate(.x, Gender=gender_names[[.y]])) -> out
+
+
+list2env(x = out, envir = environment())
+
+```
+```{r inspect_tables}
+data_b_fr_c %>%
+  glimpse()
 ```
 
 
 Check on [http://www.mortality.org](http://www.mortality.org) the meaning of the different columns:
+
+`mx`: Central death rate between ages x and x+n where n=1, 4, 5, or ∞ (open age interval)
+
+`qx`: Probability of death between ages x and x+n
+
+`ax`: Average length of survival between ages x and x+n for persons dying in the interval
+
+`lx`: Number of survivors at exact age x, assuming l(0) = 100,000
+
+`dx`: Number of deaths between ages x and x+n
+
+`ex`:: Life expectancy at exact age x (in years)
+
 
 Document [Tables de mortalité françaises pour les XIXe et XXe siècles et projections pour le XXIe siècle](https://www.lifetable.de/data/FRA/FRA000018061997CY1.pdf) contains
 detailed information on the construction of Life Tables for France.
@@ -136,6 +199,52 @@ Some columns need retyping:
 - `Lx`: should be integer
 - `Tx`: should be integer
 - Other columns should be considered as floating point numbers (`numeric`)
+
+```{r}
+retype <- function(data){
+  require(magrittr)
+
+  data %>%
+    dplyr::rename_all(stringr::str_trim) ->
+    data
+
+  double_cols <-  c("mx", "qx", "ax", "ex")
+  integer_cols <- setdiff(names(data), c(double_cols, "Country", "Gender"))
+
+  data %>%
+    dplyr::mutate_at(double_cols, as.numeric) %>%
+    dplyr::mutate_at(integer_cols, as.integer) %>%
+    tidyr::drop_na(Age) -> data
+
+
+  data
+}
+
+out %>%
+  purrr::map(retype) -> out
+
+
+list2env(x = out, envir = environment())
+
+```
+
+```{r}
+count_na <- function(data){
+  data %>%
+    dplyr::summarise_all(.funs = ~sum(is.na(.)))-> res
+  res
+}
+
+for (data_f in l_f)
+  retype(data_f) -> data_f
+for (data_m in l_m)
+  retype(data_m) -> data_m
+for (data_b in l_b)
+  retype(data_b) -> data_b
+  glimpse(data_b)
+  sapply(data_b, class)
+```
+
 
 ---
 
@@ -164,13 +273,40 @@ Preliminary inspection of the data suggests that coercion problems
 orginate from column `Age`: `110+` cannot be coerced to an integer value.
 Discard corresponding rows using `tidyr::drop_na(Age)`.
 
+```{r}
+
+```
 
 # Western countries in 1948
 
 - [ ] Plot the central death rates of all Countries at all ages for year 1948.
+
+```{r}
+pacman::p_load(viridis)
+p <- data_b %>%
+  filter(Year == '1984') %>%
+  ggplot(mapping=aes(x=Age, y=mx)) +
+  geom_point(aes(colour = forcats::as_factor(country)), size = .5) +
+  scale_x_discrete(breaks = data_b$Age[seq(1,111, by = 10)]) +
+  scale_y_log10() +
+  xlab("Age")+
+  ylab("Death rates") +
+  labs(colour = "Countries") +
+  theme_bw()
+
+print(p)
+```
+
 - [ ] Comment.
+
+  
 - [ ] Plot ratios between central death rates in European countries and
 central death rates in the USA in 1948.
+
+```{r}
+
+```
+
 - [ ] Comment
 
 # Death rates evolution since WW II
@@ -179,7 +315,17 @@ central death rates in the USA in 1948.
 both genders as a function of `Age` for  years `1946, 1956, ...` up to `2016` .
 Use aesthetics to distinguish years.
 
+```{r}
+
+```
+
+
 - [ ] Facet by `Gender`  and `Country`
+
+```{r}
+
+```
+
 
 - [ ] Write a function `ratio_mortality_rates` with signature
 `function(df, reference_year=1946, target_years=seq(1946, 2016, 10))`
