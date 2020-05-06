@@ -291,7 +291,7 @@ data_b_nl  %>%
 ```
 
 # Western countries in 1948
-
+  
 - [ ] Plot the central death rates of all Countries at all ages for year 1948.
 
 Petite explication
@@ -349,7 +349,6 @@ p <- out_us %>%
 
 
 print(p)
-
 ```
 
 - [ ] Comment
@@ -524,11 +523,42 @@ The resulting schema should look like:
 | `3`         | double  |
 | $\vdots$    | $\vdots$|
 
+```{r}
+life_table_pivot <- data_b_nl %>%
+  select(Country, Gender, Year, Age, mx) %>%
+  dplyr::mutate(mx=log(mx)) %>%
+  tidyr::pivot_wider(names_from = "Age", values_from = "mx")
+
+life_table_pivot
+```
+
+
 - [ ] Using `life_table_pivot` compute life expectancy at birth for each Country, Gender and Year
+
+```{r}
+
+ex <- function(mx){
+  sum(cumprod(1 - mx))
+}
+
+data_b_nl %>%
+  filter(Age==0) %>%
+  select(Country, Gender, Year, ex)
+
+
+```
+
 
 # Life expectancy
 
 - [ ] Write a function that takes as input a vector of mortality quotients, as well as an age, and returns the residual life expectancy corresponding to the vector and the given age.
+
+```{r}
+ex <- function(mx){
+  sum(cumprod(1 - mx))
+}
+```
+
 
 - [ ] Write a function that takes as input
 a dataframe with the same schema as  `life_table` and returns
@@ -539,10 +569,76 @@ In order to compute residual life expectancies, you may consider using `window` 
 oer apropriately defined windows. Package `dplyr` does not offer a rich API for window functions.
 Package `dbplyr` does.
 
+```{r}
+conv_to_A <- function(data){
+  data %>% 
+    select(Age, mx, Year) %>% 
+    tidyr::pivot_wider(names_from = Age, values_from = mx) %>%
+    remove_rownames %>% 
+    column_to_rownames(var="Year") -> A_
+    data.matrix(A_)
+}
+
+rex <- function(mx, age){
+  sum(cumprod(1-tail(mx, length(mx)-age)))  
+}
+
+
+full_rex <- function(lt)
+{
+  retype(lt) -> lt
+  conv_to_A(lt) -> A
+  
+  E <- matrix(0L, nrow = dim(A)[1], ncol = dim(A)[2])
+  colnames(E) <- colnames(A)
+  rownames(E) <- rownames(A)
+  
+  for (i in 1:nrow(A))
+    {
+    for(age in 0:ncol(A)-1)
+      {
+        E[i, age+1] <- rex(A[i,], age)
+      }
+    }
+  #E
+}
+
+data_f2 = data_f_nl
+
+full_rex(data_f2)->E_f
+
+glimpse(E_f)
+```
+
+
 - [ ] Plot residual life expectancy as a function of `Year` at ages $60$ and $65$,
 facet by `Gender` and `Country`.
 
 ```{r retirement, echo=FALSE, eval=FALSE}
+
+ages <- c(60, 65)
+
+re <- data_b_nl %>% 
+  filter(as.numeric(Age) > 60) %>%
+  full_rex() %>%
+  data.frame()
+
+names(re) <- levels(data_f$Age)[61:length(levels(data_f$Age))]
+
+re %>% 
+  rownames_to_column(var = "Year") -> re
+
+re %>%
+  pivot_longer(-Year, names_to = "Age", values_to = "rex") %>%
+  filter(Age %in% ages) %>%
+  ggplot(mapping = aes(x = Year, y = rex)) + 
+  geom_point(aes(colour = Age)) + 
+  scale_x_discrete(breaks = re$Year[seq(5,202, by = 50)]) +
+  facet_wrap(~ Age) +
+  geom_point(shape="+") +
+  ggtitle('Residual life expectancy') +
+  theme_bw()
+
 ```
 
 
@@ -552,6 +648,25 @@ facet by `Gender` and `Country`.
 - [ ] Pick a Country, a Gender,  a range of years `1948:2010`.
 Extract the corresponding  lines from `life_table_pivot`. Take logarithms of
 central death rates and perform principal component analysis.
+
+```{r}
+# pca = prcomp(data_b_nl, scale. = TRUE, center = TRUE)
+# pca$sdev
+# summary(pca)
+# pca$rotation
+# dim(pca$x)
+# COR = cor(data_b_nl)
+# eig = eigen(COR)
+# 
+# SVD = svd(data_b_nl)
+# 
+# 
+# data_b_nl.scale = scale(data_b_nl, scale = TRUE)
+# sum(data_b_nl.scale %*% eig$vectors - pca$x)^2
+
+
+```
+
 - [ ] comment the screeplot
 - [ ] comment the correlation circle
 - [ ] comment the biplot
@@ -566,7 +681,15 @@ central death rates and perform principal component analysis.
   returns a matrix called $Z$ with rows corresponding to `Year` and columns
   corresponding to couples `(Country, Age)`.
 
+```{r}
+
+```
+
 - [ ] Perform a Canonical Correspondance Analysis of $Z$
+```{r}
+
+```
+
 - [ ] Comment ...
 - [ ] Comment ...
 
@@ -645,3 +768,4 @@ __PCA, SVD, CCA__
 - [FactoInvestigate](http://factominer.free.fr/reporting/index_fr.html)
 - [PCA and Tidyverse](https://cmdlinetips.com/2019/05/how-to-do-pca-in-tidyverse-framework/)
 - [tidyprcomp](https://broom.tidyverse.org/reference/tidy.prcomp.html)
+
