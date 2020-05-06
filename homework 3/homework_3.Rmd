@@ -161,6 +161,8 @@ list2env(x = out, envir = environment())
 ```{r inspect_tables}
 out['data_b_nl'] %>%
   glimpse()
+
+full_data <- ldply(out, data.frame) 
 ```
 
 
@@ -300,8 +302,7 @@ Petite explication
 pacman::p_load(viridis)
 library(plyr)
 
-p <- out %>%
-  ldply( data.frame) %>%
+p <- full_data %>%
   filter(Year == '1948', Gender == 'Both') %>%
   ggplot(mapping=aes(x=Age, y=mx)) +
   geom_line(method="loess", se=FALSE, span=.5,aes(colour = forcats::as_factor(Country)), size = .2) +
@@ -380,8 +381,7 @@ after_ww_II <- seq(1946,2016, by = 10)
 pacman::p_load(viridis)
 library(plyr)
 
-p <- out %>%
-  ldply( data.frame) %>%
+p <- full_data %>%
   filter(Year %in% after_ww_II, Gender %in% c('Male','Female')) %>%
   ggplot(mapping=aes(x=Age, y=mx)) +
   geom_smooth(method="loess", se=FALSE, span=.5,aes(colour = forcats::as_factor(Year)), size = .2) +
@@ -403,7 +403,7 @@ print(p)
 - [ ] Facet by `Gender`  and `Country`
 
 ```{r}
-library(plotly)
+pacman::p_load(plotly)
 p %+%
   facet_grid(vars(Gender),vars(Country)) +
   ylab("Mortality quotients") 
@@ -505,6 +505,21 @@ q <- dplyr::filter(ratio_mortality_rates(data_b_nl), FALSE) %>%
 
 
 - [ ] Plot mortality quotients at ages $0, 1, 5$  as a function of time. Facet by Gender and Country
+```{r, fig.width=16, fig.height=16}
+ages <- c(0, 1, 5)
+
+mx_by_age <- full_data %>%
+  filter(Age %in% ages, Gender != 'Both') %>%
+  ggplot(mapping=aes(x=Year, y=mx)) +
+  geom_line(size = 0.2, aes(colour =  forcats::as_factor(Age))) +
+  facet_grid(vars(Country), vars(Gender)) +
+  scale_y_log10() +
+  ylab("mortality quotients")+
+  labs(color = 'age') +
+  theme_bw()
+
+mx_by_age
+```
 
 - [ ] Comment
 
@@ -683,7 +698,7 @@ plot_pca<-function(data, sca, cen){
   pca = prcomp(pca_data, scale. = sca, center = cen)
 
   Cor = cor(pca_data)
-  s.corcircle(Cor[,c(1,2)])
+  s.corcircle(Cor)
   
   as.data.frame(pca$x[,1:2]) %>%
     ggplot(aes(x = PC1, y = PC2)) + 
