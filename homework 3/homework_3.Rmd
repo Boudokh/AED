@@ -302,9 +302,9 @@ library(plyr)
 
 p <- out %>%
   ldply( data.frame) %>%
-  filter(Year == '1948') %>%
+  filter(Year == '1948', Gender == 'Both') %>%
   ggplot(mapping=aes(x=Age, y=mx)) +
-  geom_smooth(method="loess", se=FALSE, span=.5,aes(colour = forcats::as_factor(Country)), size = .2) +
+  geom_line(method="loess", se=FALSE, span=.5,aes(colour = forcats::as_factor(Country)), size = .2) +
   scale_y_log10() +
   xlab("Age")+
   ylab("Death rates") +
@@ -323,6 +323,32 @@ We notice that the death rates for new borns are much higher for Italy and Spain
 central death rates in the USA in 1948.
 
 ```{r}
+ratio_us_1948 <- function(tab){
+  tab  %>%
+    filter(Gender == 'Both' ) %>%
+    mutate(ratio_us = data_b_us$mx/mx) %>%
+    filter(Year == 1948) -> tab
+  return(tab)
+}
+
+out_us <- purrr::map(out, ratio_us_1948)
+#print(out_us)
+
+p <- out_us %>%
+  ldply( data.frame) %>%
+  print() %>%
+  filter(Gender =='Both') %>%
+  ggplot(mapping=aes(x=Age, y=ratio_us)) +
+  geom_line( span=.5,aes(colour = forcats::as_factor(Country)), size = .2) +
+  scale_y_log10() +
+  xlab("Age") +
+  ylab("Death rates") +
+  labs(colour = "Countries") +
+  ggtitle("Central death rates at all ages for year 1948") +
+  theme_bw()
+
+
+print(p)
 
 ```
 
