@@ -572,11 +572,12 @@ Package `dbplyr` does.
 ```{r}
 conv_to_A <- function(data){
   data %>% 
-    select(Age, mx, Year) %>% 
-    tidyr::pivot_wider(names_from = Age, values_from = mx) %>%
+    select(Year, Age, mx) %>%
+    tidyr::pivot_wider(names_from = "Age", values_from = "mx") %>%
     remove_rownames %>% 
-    column_to_rownames(var="Year") -> A_
-    data.matrix(A_)
+    column_to_rownames(var="Year") -> data
+    
+  data
 }
 
 rex <- function(mx, age){
@@ -586,10 +587,12 @@ rex <- function(mx, age){
 
 full_rex <- function(lt)
 {
-  retype(lt) -> lt
+
   conv_to_A(lt) -> A
+  data.matrix(A) -> A
   
   E <- matrix(0L, nrow = dim(A)[1], ncol = dim(A)[2])
+  
   colnames(E) <- colnames(A)
   rownames(E) <- rownames(A)
   
@@ -600,14 +603,18 @@ full_rex <- function(lt)
         E[i, age+1] <- rex(A[i,], age)
       }
     }
-  #E
+  E
 }
+```
 
-data_f2 = data_f_nl
 
-full_rex(data_f2)->E_f
+```{r}
+out_pivot <- purrr::map(out, conv_to_A)
+out_rex <- purrr::map(out, full_rex)
+out_pivot_log <- purrr::map(out_pivot, log)
 
-glimpse(E_f)
+#glimpse(out_pivot)
+#glimpse(out_rex)
 ```
 
 
@@ -619,11 +626,11 @@ facet by `Gender` and `Country`.
 ages <- c(60, 65)
 
 re <- data_b_nl %>% 
-  filter(as.numeric(Age) > 60) %>%
+  filter(as.numeric(Age) >= 60) %>%
   full_rex() %>%
   data.frame()
 
-names(re) <- levels(data_f$Age)[61:length(levels(data_f$Age))]
+names(re) <-60:109
 
 re %>% 
   rownames_to_column(var = "Year") -> re
@@ -650,21 +657,29 @@ Extract the corresponding  lines from `life_table_pivot`. Take logarithms of
 central death rates and perform principal component analysis.
 
 ```{r}
-# pca = prcomp(data_b_nl, scale. = TRUE, center = TRUE)
-# pca$sdev
-# summary(pca)
-# pca$rotation
-# dim(pca$x)
-# COR = cor(data_b_nl)
-# eig = eigen(COR)
-# 
-# SVD = svd(data_b_nl)
-# 
-# 
-# data_b_nl.scale = scale(data_b_nl, scale = TRUE)
-# sum(data_b_nl.scale %*% eig$vectors - pca$x)^2
 
+plot_pca<-function(data, sca, cen){
+  pca_data <- data
+  
+  pca_data[unlist(lapply(1948:2010, as.character)),] ->pca_data
+  
+  pca = prcomp(pca_data, scale. = sca, center = cen)
 
+  Cor = cor(pca_data)
+  s.corcircle(Cor[,c(1,2)])
+  
+  as.data.frame(pca$x[,1:2]) %>%
+    ggplot(aes(x = PC1, y = PC2)) + 
+    geom_point() +
+    geom_hline(yintercept = 0) +
+    geom_vline(xintercept = 0) +
+    geom_text(label = row.names(pca_data))
+}
+
+plot_pca(out_pivot_log$data_f_nl, TRUE, TRUE)
+plot_pca(out_pivot_log$data_f_nl, FALSE, TRUE)
+plot_pca(out_pivot_log$data_f_nl, TRUE, FALSE)
+plot_pca(out_pivot_log$data_f_nl, FALSE, FALSE)
 ```
 
 - [ ] comment the screeplot
