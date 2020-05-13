@@ -68,6 +68,9 @@ pacman::p_load(FactoMineR)
 pacman::p_load(factoextra)
 pacman::p_load(FactoInvestigate)
 pacman::p_load(ggfortify)
+pacman::p_load(plyr)
+pacman::p_load(viridis)
+
 
 old_theme <-theme_set(theme_dark(base_size=9,
                                  base_family = "Helvetica"))
@@ -162,7 +165,6 @@ list2env(x = out, envir = environment())
 out['data_b_nl'] %>%
   glimpse()
 
-full_data <- ldply(out, data.frame) 
 ```
 
 
@@ -246,6 +248,7 @@ count_na <- function(data){
 #   retype(data_b) -> data_b
 #   glimpse(data_b)
 #   sapply(data_b, class)
+full_data <- ldply(out, data.frame) 
 
 data_b_nl
 ```
@@ -299,8 +302,6 @@ data_b_nl  %>%
 Petite explication
 
 ```{r}
-pacman::p_load(viridis)
-library(plyr)
 
 p <- full_data %>%
   filter(Year == '1948', Gender == 'Both') %>%
@@ -378,18 +379,16 @@ Use aesthetics to distinguish years.
 
 after_ww_II <- seq(1946,2016, by = 10)
 
-pacman::p_load(viridis)
-library(plyr)
 
 p <- full_data %>%
-  filter(Year %in% after_ww_II, Gender %in% c('Male','Female')) %>%
+  filter(Year %in% after_ww_II, Gender != 'Both') %>%
   ggplot(mapping=aes(x=Age, y=mx)) +
-  geom_smooth(method="loess", se=FALSE, span=.5,aes(colour = forcats::as_factor(Year)), size = .2) +
+  geom_line(method="loess", se=FALSE, span=.5,aes(colour = forcats::as_factor(Year)), size = .2) +
   scale_y_log10() +
   xlab("Age")+
   ylab("Mortality quotients") +
   labs(colour = "Years") +
-  facet_wrap(vars(Gender)) +
+  facet_grid(vars(Gender),vars(Country)) +
   ggtitle("Mortality quotients for both genders as a function of Age since after WWII") +
   theme_bw()
 
@@ -695,17 +694,10 @@ plot_pca<-function(data, sca, cen){
   
   pca_data[unlist(lapply(1948:2010, as.character)),] ->pca_data
   
-  pca = prcomp(pca_data, scale. = sca, center = cen)
+  res.pca = prcomp(pca_data, scale. = sca, center = cen)
+  fviz_pca_var(res.pca,col.var = "contrib")
+  #fviz_eig(res.pca)
 
-  Cor = cor(pca_data)
-  s.corcircle(Cor)
-  
-  as.data.frame(pca$x[,1:2]) %>%
-    ggplot(aes(x = PC1, y = PC2)) + 
-    geom_point() +
-    geom_hline(yintercept = 0) +
-    geom_vline(xintercept = 0) +
-    geom_text(label = row.names(pca_data))
 }
 
 plot_pca(out_pivot_log$data_f_nl, TRUE, TRUE)
@@ -713,6 +705,24 @@ plot_pca(out_pivot_log$data_f_nl, FALSE, TRUE)
 plot_pca(out_pivot_log$data_f_nl, TRUE, FALSE)
 plot_pca(out_pivot_log$data_f_nl, FALSE, FALSE)
 ```
+
+```{r}
+pca_data <- out_pivot_log$data_f_nl
+pca_data[unlist(lapply(1948:2010, as.character)),] ->pca_data
+out_rex$data_b_nl[unlist(lapply(1948:2010, as.character)),1] -> rx
+pca_data <- cbind(pca_data, rx)
+res.pca = prcomp(pca_data, scale. = T, center = T)
+fviz_pca_ind(res.pca, repel = T)
+fviz_pca_var(res.pca,col.var = "contrib")
+fviz_eig(res.pca)
+
+```
+```{r}
+
+
+```
+
+
 
 - [ ] comment the screeplot
 - [ ] comment the correlation circle
