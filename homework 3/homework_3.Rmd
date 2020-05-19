@@ -693,17 +693,20 @@ plot_pca<-function(data, sca, cen){
   pca_data <- data
   
   pca_data[unlist(lapply(1948:2010, as.character)),] ->pca_data
-  
-  res.pca = prcomp(pca_data, scale. = sca, center = cen)
-  fviz_pca_var(res.pca,col.var = "contrib")
-  #fviz_eig(res.pca)
+  out_rex$data_b_nl[unlist(lapply(1948:2010, as.character)),1] -> rx
+  pca_data <- cbind(pca_data, rx)
+  res.pca = prcomp(pca_data, scale. = T, center = T)
+  print(fviz_pca_ind(res.pca, repel = T))
+  print(fviz_pca_var(res.pca,col.var = "contrib"))
+  print(fviz_eig(res.pca))
 
 }
 
+
 plot_pca(out_pivot_log$data_f_nl, TRUE, TRUE)
-plot_pca(out_pivot_log$data_f_nl, FALSE, TRUE)
-plot_pca(out_pivot_log$data_f_nl, TRUE, FALSE)
-plot_pca(out_pivot_log$data_f_nl, FALSE, FALSE)
+#plot_pca(out_pivot_log$data_f_nl, FALSE, TRUE)
+#plot_pca(out_pivot_log$data_f_nl, TRUE, FALSE)
+#plot_pca(out_pivot_log$data_f_nl, FALSE, FALSE)
 ```
 
 ```{r}
