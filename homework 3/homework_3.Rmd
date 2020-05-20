@@ -328,7 +328,7 @@ central death rates in the USA in 1948.
 ratio_us_1948 <- function(tab){
   tab  %>%
     filter(Gender == 'Both' ) %>%
-    mutate(ratio_us = data_b_us$mx/mx) %>%
+    mutate(ratio_us = mx/data_b_us$mx) %>%
     filter(Year == 1948) -> tab
   return(tab)
 }
@@ -346,7 +346,8 @@ p <- out_us %>%
   xlab("Age") +
   ylab("Death rates") +
   labs(colour = "Countries") +
-  ggtitle("Central death rates at all ages for year 1948") +
+  ggtitle("Ratios between central death rates in European countries and
+central death rates in the USA in 1948") +
   theme_bw()
 
 
@@ -412,6 +413,7 @@ p %+%
 
 
 - Comment concerning the plot below:
+
 We notice that the mortality quotients of young people in 1946 is smaller in the USA than in all the European countries.
 This is certainly due to the fact that the USA didn't suffer a lot from human loss during the WWII, unlike the European countries.
 
@@ -449,7 +451,7 @@ ratio_mortality_rates <- function(df,
                                   target_years=seq(1946, 2016, 10)){
   
   dplyr::filter(df, Year %in% target_years) %>%
-  dplyr::inner_join(y=df[df$Year==1946, c("Age", "mx")], by=c("Age")) %>%
+  dplyr::inner_join(y=df[df$Year==1946, c("Age", "mx","Country")], by=c("Age","Country")) %>%
   dplyr::filter(Age <90) -> df
   df <- select (df,-c(qx,ax,lx,dx,Lx,Tx,ex ))
   df
@@ -464,7 +466,7 @@ and year $t$ for $t \in 1946, \ldots, 2016$ where $m_{x,t}$ is the central death
 at age $x$ during year  $t$.
 
 ```{r}
-q <- dplyr::filter(ratio_mortality_rates(data_b_nl), FALSE) %>%
+q <- dplyr::filter(ratio_mortality_rates(full_data), FALSE)%>%
   ggplot(aes(x=Age, y=mx.x/mx.y)) +
   geom_smooth(method="loess",
               se= FALSE,
@@ -477,8 +479,10 @@ q <- dplyr::filter(ratio_mortality_rates(data_b_nl), FALSE) %>%
 ```
 
 ```{r}
+netherlands_male <- full_data %>%
+  dplyr::filter(Country == 'Netherlands',Gender == 'Male') 
 (q  %+%
-  ratio_mortality_rates(data_m_nl) +
+  ratio_mortality_rates(netherlands_male) +
   ggtitle("Variation of mortality quotient with respect to Y=1946, Males in Netherlands")) %>%
   ggplotly()
 ```
@@ -489,32 +493,52 @@ q <- dplyr::filter(ratio_mortality_rates(data_b_nl), FALSE) %>%
   1. One properly facetted plot is enough.
   
 ```{r}
-(q  %+%
-  ratio_mortality_rates(data_b_nl) +
+half_full_data <- full_data %>%
+  dplyr::filter(Country %in% c('Netherlands','USA'),Gender == 'Both')
+
+k <- dplyr::filter(ratio_mortality_rates(half_full_data), FALSE)%>%
+  ggplot(aes(x=Age, y=mx.x/mx.y)) +
+  geom_smooth(method="loess",
+              se= FALSE,
+              size =.5,
+              span= .2) +
+  facet_wrap(vars(Year)) +
+  ylab("Ratio of mortality rates, reference Year 1946") +
+  labs(colour="Year", linetype="Year") +
+  scale_colour_brewer()
+
+(k  %+% 
+  ratio_mortality_rates(half_full_data) +
    facet_grid(vars(Country),vars(Year)) +
-  ggtitle("Variation of mortality quotient with respect to Y=1946, both genders")) %>%
-  ggplotly()
+  ggtitle("Variation of mortality quotient with respect to Y=1946, both genders")) +
+  theme_bw()
 ```
   
 
 - [ ] Comment
 
+In the USA, the ratio of mortality rates between all the years after 1946 and the year 1946 has always been under 1 for all ages, which meens that since 1946 people die less in the USA than in 1946. Whereas in the Netherlands, this ratio has been higher than in the USA for all years and especially for the older ages.
+We also notice a difference for the new borns between the two countries : the ratio is twice higher for the USA in 1956 than in the Netherlands, which means that the mortality rate in 1946 was much higher in the Netherlands compared to the other years, whereas the difference is smaller for the USA between 1946 and the other years.
+The ratio becomes higher in the USA than in the Netherlands for the age 25 since 2006.
 
 # Trends
 
 
 - [ ] Plot mortality quotients at ages $0, 1, 5$  as a function of time. Facet by Gender and Country
-```{r, fig.width=16, fig.height=16}
+```{r}
+
+half_full_data_twogenders <- full_data %>%
+  dplyr::filter(Country %in% c('Netherlands','USA'),Gender != 'Both')
 ages <- c(0, 1, 5)
 
-mx_by_age <- full_data %>%
+mx_by_age <- half_full_data_twogenders %>%
   filter(Age %in% ages, Gender != 'Both') %>%
   ggplot(mapping=aes(x=Year, y=mx)) +
-  geom_line(size = 0.2, aes(colour =  forcats::as_factor(Age))) +
+  geom_line(size = 0.1, aes(colour =  forcats::as_factor(Age))) +
   facet_grid(vars(Country), vars(Gender)) +
   scale_y_log10() +
-  ylab("mortality quotients")+
-  labs(color = 'age') +
+  ylab("Mortality quotients")+
+  labs(color = 'Age') +
   theme_bw()
 
 mx_by_age
@@ -522,9 +546,38 @@ mx_by_age
 
 - [ ] Comment
 
+New borns die more than children of ages 1 and 5 for both genders and for all countries, and children of age 5 die the less.
+We don't notice any difference between the mortality quotients of the two genders, for all the countries.
+We can see some noticable peaks for the Netherlands corresponding to the two world wars, that don't appear on the US plot, for the 3 different ages.
+Also, for both the USA and our European country, the mortality quotients were obviously higher 100 years ago than what they are nowadays. 
+
+
 - [ ] Plot mortality quotients at ages $15, 20, 40, 60$  as a function of time. Facet by `Gender` and `Country`
 
+```{r}
+ages_2 <- c(15,20,40,60)
+
+mx_by_age_2 <- half_full_data_twogenders %>%
+  filter(Age %in% ages_2, Gender != 'Both') %>%
+  ggplot(mapping=aes(x=Year, y=mx)) +
+  geom_line(size = 0.1, aes(colour =  forcats::as_factor(Age))) +
+  facet_grid(vars(Country), vars(Gender)) +
+  scale_y_log10() +
+  ylab("Mortality quotients")+
+  labs(color = 'Age') +
+  theme_bw()
+
+mx_by_age_2
+```
+
+
 - [ ] Comment
+
+We observe that the mortality quotients for male are higher than for women for ages 15 to 60 for both countries.
+We can also see that the Netherlands peaks are still observable and they are even sharper, for the same years (WWI and WWII).
+Also, for both the USA and our European country, the mortality quotients were obviously higher 100 years ago than what they are nowadays. 
+
+
 
 # Rearrangement
 
