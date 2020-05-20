@@ -70,7 +70,9 @@ pacman::p_load(FactoInvestigate)
 pacman::p_load(ggfortify)
 pacman::p_load(plyr)
 pacman::p_load(viridis)
-
+pacman::p_load(CCA)
+pacman::p_load(vegan)
+pacman::p_load(corrplot)
 
 old_theme <-theme_set(theme_dark(base_size=9,
                                  base_family = "Helvetica"))
@@ -552,12 +554,17 @@ The resulting schema should look like:
 - [ ] Using `life_table_pivot` compute life expectancy at birth for each Country, Gender and Year
 
 ```{r}
-life_table_pivot <- data_b_nl %>%
+life_table_pivot <- full_data %>%
+  select(Country, Gender, Year, Age, mx) %>%
+  tidyr::pivot_wider(names_from = "Age", values_from = "mx")
+
+life_table_pivot
+
+life_table_pivot_log <- full_data %>%
   select(Country, Gender, Year, Age, mx) %>%
   dplyr::mutate(mx=log(mx)) %>%
   tidyr::pivot_wider(names_from = "Age", values_from = "mx")
 
-life_table_pivot
 ```
 
 
@@ -569,11 +576,11 @@ ex <- function(mx){
   sum(cumprod(1 - mx))
 }
 
-data_b_nl %>%
-  filter(Age==0) %>%
-  select(Country, Gender, Year, ex)
 
-
+life_table_pivot %>%
+    select(-c("Country","Gender","Year")) %>%
+    apply(1, ex) -> life_table_pivot$life_ex 
+life_table_pivot
 ```
 
 
@@ -693,15 +700,16 @@ plot_pca<-function(data, sca, cen){
   pca_data <- data
   
   pca_data[unlist(lapply(1948:2010, as.character)),] ->pca_data
-  
+  out_rex$data_b_nl[unlist(lapply(1948:2010, as.character)),1] -> rx
+  pca_data <- cbind(pca_data, rx)
   res.pca = prcomp(pca_data, scale. = sca, center = cen)
-  fviz_pca_var(res.pca,col.var = "contrib")
-  #fviz_eig(res.pca)
-
+  print(fviz_pca_ind(res.pca, repel = T))
+  print(fviz_pca_var(res.pca,col.var = "contrib"))
+  print(fviz_eig(res.pca))
 }
-
 plot_pca(out_pivot_log$data_f_nl, TRUE, TRUE)
 plot_pca(out_pivot_log$data_f_nl, FALSE, TRUE)
+
 plot_pca(out_pivot_log$data_f_nl, TRUE, FALSE)
 plot_pca(out_pivot_log$data_f_nl, FALSE, FALSE)
 ```
@@ -743,9 +751,46 @@ fviz_eig(res.pca)
 
 ```{r}
 
+cnty <- c("Spain", "Netherlands")
+
+life_table_pivot %>%
+  filter(Country %in% cnty, Year %in% 1948:1998, Gender == 'Female' ) %>%
+  select(-c("Gender","life_ex")) -> Z
+
+sp <-Z %>%
+  filter(Country == "Spain" ) %>%
+  select(-"Country")
+
+nd <-Z %>%
+  filter(Country == "Netherlands" ) %>%
+  select(-"Country") 
+
+n = names(sp)
+
+names(sp) <- c(n[1],paste(tail(n,length(n)-1) , "sp", sep="-"))
+names(nd) <- c(n[1],paste(tail(n,length(n)-1) , "nd", sep="-"))
+
+Z<-merge(nd,sp)
+
+print(Z)
+#res.cc=cc(sp,nd)
+#plt.cc(res.cc)
+
+cancor(sp, nd) -> cca
+
+#p.cca <- vegan::cca(Z)
+#plot(p.cca, type ='t')
 ```
 
 - [ ] Perform a Canonical Correspondance Analysis of $Z$
+```{r}
+data(dune)
+data(dune.env)
+print(dune.env)
+mod <- cca(dune ~ A1 + Moisture + Management, dune.env)
+plot(mod)
+```
+
 ```{r}
 
 ```
