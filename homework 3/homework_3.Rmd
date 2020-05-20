@@ -330,7 +330,7 @@ central death rates in the USA in 1948.
 ratio_us_1948 <- function(tab){
   tab  %>%
     filter(Gender == 'Both' ) %>%
-    mutate(ratio_us = data_b_us$mx/mx) %>%
+    mutate(ratio_us = mx/data_b_us$mx) %>%
     filter(Year == 1948) -> tab
   return(tab)
 }
@@ -383,7 +383,7 @@ after_ww_II <- seq(1946,2016, by = 10)
 
 
 p <- full_data %>%
-  filter(Year %in% after_ww_II, Gender != 'Both') %>%
+  filter(Year %in% after_ww_II, Gender != 'Both', Country %in% c('USA', 'Netherlands')) %>%
   ggplot(mapping=aes(x=Age, y=mx)) +
   geom_line(method="loess", se=FALSE, span=.5,aes(colour = forcats::as_factor(Year)), size = .2) +
   scale_y_log10() +
@@ -476,6 +476,7 @@ q <- dplyr::filter(ratio_mortality_rates(data_b_nl), FALSE) %>%
   ylab("Ratio of mortality rates, reference Year 1946") +
   labs(colour="Year", linetype="Year") +
   scale_colour_brewer()
+
 ```
 
 ```{r}
@@ -708,10 +709,9 @@ plot_pca<-function(data, sca, cen){
   print(fviz_eig(res.pca))
 }
 plot_pca(out_pivot_log$data_f_nl, TRUE, TRUE)
-plot_pca(out_pivot_log$data_f_nl, FALSE, TRUE)
-
-plot_pca(out_pivot_log$data_f_nl, TRUE, FALSE)
-plot_pca(out_pivot_log$data_f_nl, FALSE, FALSE)
+#plot_pca(out_pivot_log$data_f_nl, FALSE, TRUE)
+#plot_pca(out_pivot_log$data_f_nl, TRUE, FALSE)
+#plot_pca(out_pivot_log$data_f_nl, FALSE, FALSE)
 ```
 
 ```{r}
@@ -751,33 +751,40 @@ fviz_eig(res.pca)
 
 ```{r}
 
-cnty <- c("Spain", "Netherlands")
+cnty <- c("USA", "Netherlands")
 
 life_table_pivot %>%
   filter(Country %in% cnty, Year %in% 1948:1998, Gender == 'Female' ) %>%
   select(-c("Gender","life_ex")) -> Z
 
-sp <-Z %>%
-  filter(Country == "Spain" ) %>%
+us <-Z %>%
+  filter(Country == "USA" ) %>%
   select(-"Country")
 
 nd <-Z %>%
   filter(Country == "Netherlands" ) %>%
   select(-"Country") 
 
-n = names(sp)
+n = names(us)
 
-names(sp) <- c(n[1],paste(tail(n,length(n)-1) , "sp", sep="-"))
-names(nd) <- c(n[1],paste(tail(n,length(n)-1) , "nd", sep="-"))
+#names(us) <- c(n[1],paste(tail(n,length(n)-1) , "us", sep="-"))
+#names(nd) <- c(n[1],paste(tail(n,length(n)-1) , "nd", sep="-"))
 
-Z<-merge(nd,sp)
+Z<-merge(nd,us)
 
 print(Z)
 #res.cc=cc(sp,nd)
 #plt.cc(res.cc)
 
-cancor(sp, nd) -> cca
+#cancor(sp, nd) -> cca
 
+correl <- matcor(us, nd )
+img.matcor(correl, type = 2)
+
+
+cca <- cc(us, nd)
+
+plt.cc(cc2, var.label = TRUE, ind.names = data[,1])
 #p.cca <- vegan::cca(Z)
 #plot(p.cca, type ='t')
 ```
@@ -792,7 +799,53 @@ plot(mod)
 ```
 
 ```{r}
-
+years = c(1933:1995)
+lee_carter = function(df,ref_country,years)
+{
+  lt <- df %>%
+  select(Year, Age, Gender,Country, mx) %>%
+  tidyr::pivot_wider(names_from = "Age", values_from = "mx")
+  lt%>%
+    filter(Country == ref_country, Year %in% years) -> lt
+  data.frame(lt[,c(1,2,3)],apply(lt[,-c(1,2,3)],MARGIN = 2,FUN = log)) -> lt
+  M <- lt %>%
+  select(-c(Year,Gender,Country))
+  # The mean log-rate for each age group.
+  a <- colMeans(M)
+  # Subtract the average age pattern a from all years
+  for (j in 1:110)
+  {
+    M[,j] <- M[,j] - a[j]
+  }
+  # Compute SVD, M = U D V' where U and V' are orthogonal matrices and D is diagonal matrix of singular values. This vector models how to different age groups react to mortality change.
+  d <- svd(M, 1, 1)
+  # Lee and Carter normalize the first row of V so it sums to one and call it b.
+  b <- d$v/sum(d$v)
+  # Lee and Carter take the first column of U, multiply by D_1,1 and multiply by the sum of the first row of V' and call that k. This vector captures overall mortality change over time.
+  k <- d$u * sum(d$v) * d$d[1]
+  mx_lc = c()
+  for (i in 1:length(k))
+  {
+    mx_lc = append(mx_lc,exp(a + b*k[i]))
+  }
+  result <- filter(df, Year %in% years, Country == ref_country) %>%
+    mutate(Year = factor(Year), mx_lc)
+  return (result)
+}
+# Plotting parameters and fits.
+df_lc = df %>%
+  select(Year,Age,Gender,Country,mx)
+usa_lc_33_95 = lee_carter(df_lc,"USA",years)
+years = c(2000:2015)
+usa_lc_00_15 = lee_carter(df_lc,"USA",years)
+p<- ggplot() + 
+  geom_point(aes(Age, mx, color=Year)) + 
+  geom_line(aes(Age,mx_lc,color=Year)) + 
+  scale_y_log10()+
+  facet_wrap(~Gender) 
+years = seq(2000,2015,by = 5)
+(p%+%
+  filter(usa_lc_00_15,Year %in% years))%>%ggplotly()
 ```
 
 
