@@ -359,6 +359,8 @@ print(p)
 
 
 ```{r}
+
+# to delete
 for (df in out){
   df %>%
     filter(Gender == 'Both') %>%
@@ -581,7 +583,9 @@ ex <- function(mx){
 life_table_pivot %>%
     select(-c("Country","Gender","Year")) %>%
     apply(1, ex) -> life_table_pivot$life_ex 
-life_table_pivot
+
+life_table_pivot  
+
 ```
 
 
@@ -759,11 +763,16 @@ life_table_pivot %>%
 
 us <-Z %>%
   filter(Country == "USA" ) %>%
-  select(-"Country")
+  select(-c("Country")) %>%
+  column_to_rownames(var="Year") %>%
+  as.matrix()
+
 
 nd <-Z %>%
   filter(Country == "Netherlands" ) %>%
-  select(-"Country") 
+  select(-c("Country")) %>%
+  column_to_rownames(var="Year") %>%
+  as.matrix()
 
 n = names(us)
 
@@ -782,14 +791,25 @@ correl <- matcor(us, nd )
 img.matcor(correl, type = 2)
 
 
-cca <- cc(us, nd)
+cca_2 <- cancor(nd,us)
 
-plt.cc(cc2, var.label = TRUE, ind.names = data[,1])
+plot(cca_2)
+
+#plt.cc(cca, var.label = TRUE, ind.names = data[,1])
 #p.cca <- vegan::cca(Z)
 #plot(p.cca, type ='t')
 ```
 
 - [ ] Perform a Canonical Correspondance Analysis of $Z$
+```{r}
+data(Rohwer, package="heplots")
+X <- as.matrix(Rohwer[,6:10])  # the PA tests
+Y <- as.matrix(Rohwer[,3:5])  
+cc <- cancor(X, Y)
+
+plot(cc)
+```
+
 ```{r}
 data(dune)
 data(dune.env)
@@ -799,53 +819,7 @@ plot(mod)
 ```
 
 ```{r}
-years = c(1933:1995)
-lee_carter = function(df,ref_country,years)
-{
-  lt <- df %>%
-  select(Year, Age, Gender,Country, mx) %>%
-  tidyr::pivot_wider(names_from = "Age", values_from = "mx")
-  lt%>%
-    filter(Country == ref_country, Year %in% years) -> lt
-  data.frame(lt[,c(1,2,3)],apply(lt[,-c(1,2,3)],MARGIN = 2,FUN = log)) -> lt
-  M <- lt %>%
-  select(-c(Year,Gender,Country))
-  # The mean log-rate for each age group.
-  a <- colMeans(M)
-  # Subtract the average age pattern a from all years
-  for (j in 1:110)
-  {
-    M[,j] <- M[,j] - a[j]
-  }
-  # Compute SVD, M = U D V' where U and V' are orthogonal matrices and D is diagonal matrix of singular values. This vector models how to different age groups react to mortality change.
-  d <- svd(M, 1, 1)
-  # Lee and Carter normalize the first row of V so it sums to one and call it b.
-  b <- d$v/sum(d$v)
-  # Lee and Carter take the first column of U, multiply by D_1,1 and multiply by the sum of the first row of V' and call that k. This vector captures overall mortality change over time.
-  k <- d$u * sum(d$v) * d$d[1]
-  mx_lc = c()
-  for (i in 1:length(k))
-  {
-    mx_lc = append(mx_lc,exp(a + b*k[i]))
-  }
-  result <- filter(df, Year %in% years, Country == ref_country) %>%
-    mutate(Year = factor(Year), mx_lc)
-  return (result)
-}
-# Plotting parameters and fits.
-df_lc = df %>%
-  select(Year,Age,Gender,Country,mx)
-usa_lc_33_95 = lee_carter(df_lc,"USA",years)
-years = c(2000:2015)
-usa_lc_00_15 = lee_carter(df_lc,"USA",years)
-p<- ggplot() + 
-  geom_point(aes(Age, mx, color=Year)) + 
-  geom_line(aes(Age,mx_lc,color=Year)) + 
-  scale_y_log10()+
-  facet_wrap(~Gender) 
-years = seq(2000,2015,by = 5)
-(p%+%
-  filter(usa_lc_00_15,Year %in% years))%>%ggplotly()
+
 ```
 
 
@@ -878,23 +852,144 @@ and $\epsilon_{x,t}$ are i.i.d Gaussian random variables.
 ## US data
 
 - [ ] Fit a Lee-Carter model on the American data (for Male and Female data) training on years `1933` up to `1995`.
+```{r}
+
+
+Lee_carter_fit<- function(df, c, g, y_start, y_lc ,y_end){
+  df %>% 
+    filter(Country == c , Year %in% y_start:y_lc, Gender == g ) %>%
+    select(-c(Gender,Country, Year)) -> m
+  
+  ax <- m %>%
+    colMeans() %>% 
+    as.matrix() 
+  
+  m %>%
+    sweep(2, ax) %>%
+    svd(1,1) -> df.svd
+  
+  bx <- as.matrix(df.svd$v/sum(df.svd$v))
+  k_t <- t(sum(df.svd$v)*df.svd$d[1]*df.svd$u)
+
+  
+  drift =(k_t[length(k_t)]-k_t[1])/length(k_t)
+  for (i in 1:(y_end-y_lc)){
+    eps  = rnorm(1, mean = 0, sd = sqrt(sd(k_t)))
+    k_t <- cbind(k_t,k_t[length(k_t)]+drift+eps)
+  }
+  
+  lc <- sweep(bx %*% k_t, 1, ax, "+") %>%
+    t() %>%
+    as.tibble() 
+  
+  names(lc) <- 0:109
+  lc$Year <- y_start:y_end
+
+  lc
+  }
+
+
+lt_lc <- Lee_carter_fit(life_table_pivot_log, 'USA', 'Female', 1933, 1995, 2040)
+
+lt_lc <-lt_lc %>%
+  pivot_longer(-Year,names_to = "Age", values_to = "mx_lc") %>%
+  mutate(mx_lc = exp(mx_lc), Age = as.numeric(Age))
+
+                
+lt_lc_us <- merge(data_b_us, lt_lc_us)
+lt_lc_us <- lt_lc_us[order(lt_lc_us$Year, lt_lc_us$Age),]
+
+```
+
+``` {r }
+years <- seq(1935,1995, by = 20)
+
+
+p <- lt_lc_us %>%
+  filter(Year %in% years) %>%
+  select(c(Year,mx, mx_lc, Age)) %>%
+  pivot_longer(-c(Year,Age),names_to = "method", values_to = "mx_n") %>%        
+  ggplot(mapping=aes(x=Age, y=mx_n)) +
+  geom_line(method="loess", se=FALSE, span=.5,aes(colour = forcats::as_factor(method)), size = .2) +
+  scale_y_log10() +
+  xlab("Age")+
+  ylab("Mortality quotients") +
+  labs(colour = "Mx method") +
+  facet_wrap(~ Year) +
+  ggtitle("Lee carter fit comparaison") +
+  theme_bw()
+
+print(p)
+
+
+```
 - [ ] Compare the fit provided by the Lee-Carter model with the fit provided by a rank $2$
 truncated SVD
 - [ ] Compare vectors avec $(a_x)_x, (b_x)_x$ and $(\kappa_t)_t$ with appropriate singular vectors.
 - [ ] Use the Lee-Carter model to predict the central death rates for years $2000$ up to $2015$
 - [ ] Plot predictions and observations for years $2000, 2005, 2010, 2015$
+```{r}
+years <- seq(2000,2015, by = 5)
+
+p <- lt_lc_us %>%
+  filter(Year %in% years) %>%
+  select(c(Year,mx, mx_lc, Age)) %>%
+  pivot_longer(-c(Year,Age),names_to = "method", values_to = "mx_n") %>%        
+  ggplot(mapping=aes(x=Age, y=mx_n)) +
+  geom_line(method="loess", se=FALSE, span=.5,aes(colour = forcats::as_factor(method)), size = .2) +
+  scale_y_log10() +
+  xlab("Age")+
+  ylab("Mortality quotients") +
+  labs(colour = "Mx method") +
+  facet_wrap(~ Year) +
+  ggtitle("Lee carter fit comparaison") +
+  theme_bw()
+
+print(p)
+```
+
 
 ## Application of Lee-Carter model to a European Country
 
 - [ ] Fit a Lee-Carter model to a European country
+```{r}
+
+
+```
 - [ ] Comment
 - [ ] Compare with rank-2 truncated SVD
 - [ ] Use the Lee-Carter model to predict the central death rates for years $2000$ up to $2015$
       Plot predictions and observations for years $2000, 2005, 2010, 2015$
-
+      
 ## Predictions of life expectancies at different ages
 
 - [ ] Use Lee-Carter approximation to approximate residual life expectations
+```{r}
+
+lt_lc_us_pivot <- lt_lc %>%
+  select(Year, Age, mx_lc) %>%
+  tidyr::pivot_wider(names_from = "Age", values_from = "mx_lc")
+
+lt_lc_us_pivot %>%
+    select(-Year) %>%
+    apply(1, ex) -> lt_lc_us_pivot$life_ex 
+
+
+p <- lt_lc_us_pivot %>%
+  ggplot(mapping=aes(x=Year, y=life_ex)) +
+  geom_line(method="loess", se=FALSE, span=.5, size = .2) +
+  scale_y_log10() +
+  xlab("Age")+
+  ylab("Mortality quotients") +
+  labs(colour = "Mx method") +
+  ggtitle("Lee carter fit comparaison") +
+  theme_bw()
+
+print(p)
+
+
+```
+
 - [ ] Compare with observed residual life expectations
 
 # References
