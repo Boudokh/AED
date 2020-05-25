@@ -370,6 +370,8 @@ for (df in out){
 
 - [ ] Comment
 
+
+
 # Death rates evolution since WW II
 
 - [ ] Plot mortality quotients (column `mx`) for
@@ -487,6 +489,14 @@ netherlands_male <- full_data %>%
   ggplotly()
 ```
 
+```{r}
+netherlands_female <- full_data %>%
+  dplyr::filter(Country == 'Netherlands',Gender == 'Female') 
+(q  %+%
+  ratio_mortality_rates(netherlands_female) +
+  ggtitle("Variation of mortality quotient with respect to Y=1946, Females in Netherlands")) %>%
+  ggplotly()
+```
 
 
   1. Handle both genders and countries `Spain`, `Italy`, `France`, `England & Wales`, `USA`, `Sweden`, `Netherlands`.
@@ -539,6 +549,7 @@ mx_by_age <- half_full_data_twogenders %>%
   scale_y_log10() +
   ylab("Mortality quotients")+
   labs(color = 'Age') +
+  ggtitle("Variation of mortality quotient at ages 0, 1 and 5 as a function of time") +
   theme_bw()
 
 mx_by_age
@@ -565,6 +576,7 @@ mx_by_age_2 <- half_full_data_twogenders %>%
   scale_y_log10() +
   ylab("Mortality quotients")+
   labs(color = 'Age') +
+  ggtitle("Variation of mortality quotient at ages 15, 20, 40 and 60 as a function of time") +
   theme_bw()
 
 mx_by_age_2
@@ -726,7 +738,7 @@ re %>%
   scale_x_discrete(breaks = re$Year[seq(5,202, by = 50)]) +
   facet_wrap(~ Age) +
   geom_point(shape="+") +
-  ggtitle('Residual life expectancy') +
+  ggtitle('Residual life expectancy as a function of Year at ages 60 and 65') +
   theme_bw()
 
 ```
@@ -798,7 +810,7 @@ fviz_eig(res.pca)
 - [ ] Perform a Canonical Correspondance Analysis of $Z$
 
 ```{r}
-
+  
 ```
 
 - [ ] Perform a Canonical Correspondance Analysis of $Z$

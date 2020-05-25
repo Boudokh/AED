@@ -1,9 +1,8 @@
 ---
 title: 'Homework II: SVD analysis & Life Tables'
-#subtitle: '2020-05-20'
 author: "Inès Dardouri, Mohamed Boudokhane and Lycia Fezzoua"
 date: "`r Sys.Date()`"
-output:
+output: 
   xaringan::moon_reader:
     lib_dir: libs
     nature:
@@ -17,9 +16,6 @@ params:
     timecourse: 1945:2015
 ---
 
-class: inverse, center, middle
-
-
 # Introduction
 
 
@@ -27,18 +23,6 @@ class: inverse, center, middle
 * Item 2
     + Item 2a
     + Item 2b
-  
-
----
-class: inverse, center, middle
-    
-# Central death rates at all ages for year 1948
-
-
-```{r echo=FALSE}
-knitr::include_graphics("images/Central death rates at all ages for year 1948.jpg")
-```
-
 
 ---
 class: inverse, center, middle
@@ -46,10 +30,10 @@ class: inverse, center, middle
 
 
 ---
-class: inverse, center, middle
+class: center, middle
 
 ```{r echo=FALSE}
-knitr::include_graphics("images/Mortality quotients for both genders as a function of Age since after WWII.jpg")
+knitr::include_graphics("images/Mortality quotients for both genders facetted.jpg")
 ```
 
 <!-- -- -->
@@ -60,20 +44,29 @@ knitr::include_graphics("images/Mortality quotients for both genders as a functi
 <!-- This will appear on click but a bit farther away -->
 
 ---
-class: inverse, center, middle
-
+class: center, middle
 
 ```{r echo=FALSE}
-knitr::include_graphics("images/Mortality quotients for both genders facetted.jpg")
+knitr::include_graphics("images/mortality quoteints after wwii by country.jpg")
 ```
 ---
-
 class: inverse, center, middle
 
 #Ration between central death rates in European countries and central death rates in the USA in 1948
 
+---
+class: center, middle
+
 ```{r echo=FALSE}
 knitr::include_graphics("images/Ration between Europe and usa.jpg")
+```
+
+---
+class: center, middle
+
+```{r echo=FALSE}
+knitr::include_graphics("images/mortality par rapport a 46.jpg")
+
 ```
 
 ---
@@ -81,13 +74,15 @@ class: inverse, center, middle
 
 #PCA 
 
+---
+class: center, middle
+
 ```{r echo=FALSE}
 knitr::include_graphics("images/pca3.jpg")
 ```
 
 ---
-class: inverse, center, middle
-
+class: center, middle
 #PCA 
 
 ```{r out.width="450px", fig.height=5,echo=FALSE}
@@ -95,3 +90,15 @@ knitr::include_graphics("images/pca1.jpg")
 knitr::include_graphics("images/pca2.jpg")
 
 ```
+---
+class: inverse, center, middle
+
+#Lee-Carter model
+
+---
+class: center, middle
+
+---
+
+
+
