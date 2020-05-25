@@ -357,6 +357,7 @@ print(p)
 ```
 
 
+
 ```{r}
 for (df in out){
   df %>%
@@ -370,7 +371,7 @@ for (df in out){
 
 - [ ] Comment
 
-
+We can see that the ratio between central death rate in Netherlands and central death rate in the USA is less than 1, which means that the central death rate in Netherlands is lower than central death rate in the USA in 1948. But we can also see that this ratio is greater than 1 for almost all the other European countries, which means that the central death rate in the majority of the European countries is higher than the central death rate in the USA in 1948, especially for Italy. This difference could be explained by the health conditions and the financial situation of the two continents at that time.
 
 # Death rates evolution since WW II
 

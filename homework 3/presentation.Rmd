@@ -33,7 +33,7 @@ class: inverse, center, middle
 class: center, middle
 
 ```{r echo=FALSE}
-knitr::include_graphics("images/Mortality quotients for both genders facetted.jpg")
+knitr::include_graphics("images/mortality quoteints after wwii by country.jpg")
 ```
 
 <!-- -- -->
@@ -47,7 +47,7 @@ knitr::include_graphics("images/Mortality quotients for both genders facetted.jp
 class: center, middle
 
 ```{r echo=FALSE}
-knitr::include_graphics("images/mortality quoteints after wwii by country.jpg")
+knitr::include_graphics("images/Mortality quotients for both genders facetted.jpg")
 ```
 ---
 class: inverse, center, middle
