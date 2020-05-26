@@ -3,18 +3,16 @@ title: 'Homework II: SVD analysis & Life Tables'
 author: "Inès Dardouri, Mohamed Boudokhane and Lycia Fezzoua"
 date: "`r Sys.Date()`"
 output:
-  pdf_document:
-    toc: yes
-  html_notebook:
-    code_folding: none
-    number_sections: yes
-    toc: yes
+  
   html_document:
     fig_caption: yes
     keep_md: yes
     number_sections: yes
     toc: yes
-subtitle: 'Deadline: 2020-05-20'
+  html_notebook:
+    code_folding: none
+    number_sections: yes
+    toc: yes
 params:
   country: France
   country_code: fr_t
@@ -25,7 +23,7 @@ params:
 
 ---
 
-#Introduction and objectives
+# Introduction and objectives
 
 
 This research work consists in making a demographic study on the mortality rates of several population of the world,describing different countries of Europe and the United States, based on different factors, such as gender and age.
@@ -172,7 +170,7 @@ The meaning of the different columns:
 
 `dx`: Number of deaths between ages x and x+n
 
-`ex`:: Life expectancy at exact age x (in years)
+`ex`: Life expectancy at exact age x (in years)
 
 
 But some of the columns need retyping:
@@ -240,7 +238,7 @@ Preliminary inspection of the data suggests that coercion problems
 originate from column `Age`: `110+` cannot be coerced to an integer value.
 We discard corresponding rows using `tidyr::drop_na(Age)`.
 
-```{r result="hide"}
+```{r results="hide"}
 out %>%
   purrr::map(~ sum(is.na(.))) %>%
   as.data.frame() %>%
@@ -300,6 +298,7 @@ print(p)
 We can see that the ratio between central death rate in Netherlands and central death rate in the USA is less than 1 for almost all the ages except the oldest ones, which means that the central death rate in Netherlands is lower than central death rate in the USA in 1948. But we can also see that this ratio is greater than 1 for almost all the other European countries (except Sweden), which means that the central death rate in the majority of the European countries is higher than the central death rate in the USA in 1948, especially for France and Spain. This difference could be explained by the health conditions and the financial situation of the two continents at that time.
   
 * **Visualization of ratios between central death rates in European countries and central death rates in the USA in 1965 :** 
+
 ```{r fig.width=10, fig.height=3}
 out_us_65 <- purrr::map(out, ratio_us_year,1965)
 p <- out_us_65 %>%
@@ -315,10 +314,12 @@ p <- out_us_65 %>%
   theme_bw()
 print(p)
 ```
+
 When we plot the same ratio but almost 20 years later, we can see the evolution of European countries' central death rates.
 Indeed, the ratio becomes lower than 1 for the middle ages, which means central death rates of European countries are approching USA's central death rates, even if it's still not the case at the extremities' ages. So, in 1965 Europe started regaining the health gap between her and the USA, comparing to what it was 20 years earlier
   
-* **Visualization of ratios between central death rates in European countries and central death rates in the USA in 2015 :** 
+* **Visualization of ratios between central death rates in European countries and central death rates in the USA in 2015 :**
+
 ```{r fig.width=10, fig.height=3}
 out_us_15 <- purrr::map(out, ratio_us_year,2015)
 p <- out_us_15 %>%
@@ -707,10 +708,6 @@ cca_2 <- cancor(nd,us)
 - [ ] Perform a Canonical Correspondance Analysis of $Z$
 
 
-
-- [ ] Comment ...
-- [ ] Comment ...
-
 # Lee-Carter model for US mortality
 
 During the last century, in the USA and in western Europe,
@@ -747,7 +744,9 @@ $a_x$ and $b_x = \frac{V_{x,1}}{\sum_{x} V_{.,1}}$ are the age dependent element
 The following graphs show that our Lee-Carter fit raging from 1933 to 1995 of US mortality data is acceptable and we can proceed with the prediction of our futur $k_t$ values.
 
 ## US data
-- [ ] Fit a Lee-Carter model on the American data (for Male and Female data) training on years `1933` up to `1995`.
+
+- We fit a Lee-Carter model on the American data (for Male and Female data) training on years `1933` up to `1995`.
+
 ```{r}
 
 
@@ -830,7 +829,7 @@ plot_mortality_lee_carter(life_table_pivot_log, 'USA', 'Male', 1933, 1995, 2040,
 
 
 
-- [ ] Use the Lee-Carter model to predict the central death rates for years $2000$ up to $2015$
+- We use the Lee-Carter model to predict the central death rates for years $2000$ up to $2015$
 
       
 For the prediction we have used a random walk as mentionned in the 1992 publication by Ronald Lee:
@@ -840,7 +839,8 @@ the drift is the trickiest part to estimate, it has a massive impact on the tren
 which. We have used the same function as the one used for the fit and just concatenate the new $k$ values to the fitted vector. the resulting matrix will have x lines corresponding to the fitted values and y lines for the predicted years.   
 
 
-- [ ] Plot predictions and observations for years $2000, 2005, 2010, 2015$
+- We plot predictions and observations for years $2000, 2005, 2010, 2015$
+
 ```{r}
 
 years <- seq(2000,2015, by = 5)
@@ -851,18 +851,20 @@ plot_mortality_lee_carter(life_table_pivot_log, 'USA', 'Male', 1933, 1995, 2040,
 
 ## Application of Lee-Carter model to a European Country
 
-- [ ] Fit a Lee-Carter model to a European country
+- We fit a Lee-Carter model to a European country
+
 ```{r}
 
 years <- seq(1935,1995, by = 20)
 plot_mortality_lee_carter(life_table_pivot_log, 'Netherlands', 'Male', 1933, 1995, 2040, years)
 ```
-- [ ] Comment
+
+
 The lee-Carter fit is very close to the observed values. Although it's smoother than the real mortality curve, it shouldn't impact our next prediction.
 
-- [ ] Compare with rank-2 truncated SVD
-- [ ] Use the Lee-Carter model to predict the central death rates for years $2000$ up to $2015$
-      Plot predictions and observations for years $2000, 2005, 2010, 2015$
+- We compare with rank-2 truncated SVD
+- We use the Lee-Carter model to predict the central death rates for years $2000$ up to $2015$
+  We Plot predictions and observations for years $2000, 2005, 2010, 2015$
 
 ```{r}
 
@@ -870,9 +872,11 @@ years <- seq(2000,2015, by = 5)
 plot_mortality_lee_carter(life_table_pivot_log, 'Netherlands', 'Female', 1933, 1995, 2040, years)
 
 ```   
+
 ## Predictions of life expectancies at different ages
 
-- [ ] Use Lee-Carter approximation to approximate residual life expectations
+- We use Lee-Carter approximation to approximate residual life expectations
+
 ```{r}
 
 get_lee_carter_life_exp <- function(df, c, g, y_start, y_lc ,y_end){
@@ -983,6 +987,7 @@ lc_life_exp_compare_avg<- function(y_start, y_lc ,y_end, n, g){
 lc_life_exp_compare_avg(1945, 1995, 2050, 100, 'Both')
   
 ```
+
 If we exculde the years of WWII we can get mean life_expectancies very close to real life data, the sudden growth of the post-war era helps the dutch $k_t$ keep it upward trend while it doesn't affect the US Data since the civilian population was not impacted, at least directly, by the war.
 
 While in the plot below we fit from 1933 to 2000 and our drift doesn't account for the sudden drop in the mortality for the war impacted counties and our prediction paint a very dim prospect for the Netherlands with their life expactancy raching the level of the USA in 2016 while in reality they have around a 1.5 year advantage over the USA. 
@@ -994,7 +999,9 @@ lc_life_exp_compare_avg(1933, 2000, 2050, 100, 'Both')
 
 
 ```
+
 ## Issues
+
 Our last attempts af find the right balance for the fit show that the Lee-Carter fit is very sensitive to overfitting, they year choices can be misleading and used to inintetionnally or dishonestly to pain a different picture from reality.
 The model is also greatly impacted by short but impactful events such as wars or other disaters. 
 It also suggest that current upward trends will continue even if they are due to specific medical advancments or other helpful factors that may not continue in the futur.
