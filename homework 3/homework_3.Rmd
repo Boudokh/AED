@@ -3,16 +3,16 @@ title: 'Homework II: SVD analysis & Life Tables'
 author: "Inès Dardouri, Mohamed Boudokhane and Lycia Fezzoua"
 date: "`r Sys.Date()`"
 output:
-  html_document:
-    fig_caption: yes
-    keep_md: yes
-    number_sections: yes
+  pdf_document:
     toc: yes
   html_notebook:
     code_folding: none
     number_sections: yes
     toc: yes
-  pdf_document:
+  html_document:
+    fig_caption: yes
+    keep_md: yes
+    number_sections: yes
     toc: yes
 subtitle: 'Deadline: 2020-05-20'
 params:
@@ -817,7 +817,7 @@ plot_mortality_lee_carter <- function(df, c, g, y_start, y_lc ,y_end, years){
     labs(colour = "Method") +
     facet_wrap(~ Year) +
     ggtitle("Lee carter fit comparaison") +
-    scale_colour_discrete(labels = c('real', 'Lee-Carter')) +
+    scale_colour_discrete(labels = c('Observed', 'Lee-Carter')) +
     theme_bw() 
   print(lc_plot)
 }
@@ -867,7 +867,7 @@ The lee-Carter fit is very close to the observed values. Although it's smoother 
 ```{r}
 
 years <- seq(2000,2015, by = 5)
-plot_mortality_lee_carter(life_table_pivot_log, 'USA', 'Male', 1933, 1995, 2040, years)
+plot_mortality_lee_carter(life_table_pivot_log, 'Netherlands', 'Female', 1933, 1995, 2040, years)
 
 ```   
 ## Predictions of life expectancies at different ages
@@ -912,12 +912,13 @@ life_table_pivot %>%
   labs(colour = 'Method')+
   xlab("Year")+
   ylab("Life expectancy") +
-  scale_colour_discrete(labels = c('real', 'Lee-Carter')) +
+  scale_colour_discrete(labels = c('Observed', 'Lee-Carter')) +
   ggtitle("Lee-Carter prediction comparaison for USA 1995-2017") +
   theme_bw()
 
 ```
 
+We can se that the prediction is relatively accurate, but we can note that it's very noisy and varies a lot between each iteration. we should try to perform a great number of Lee-Carter forcast and compare the average life expectancy with the observed values.
 
 
 ```{r}
@@ -928,7 +929,6 @@ lee_carter_avg  <- function(df, c, g, y_start, y_lc ,y_end, nb){
   lc_le <- data.frame(Year = y_start:y_end )
 
   for (i in 1:nb){
-    #tmp <- get_lee_carter_life_exp(df, c, g, y_start, y_lc ,y_end)
     lc_le[i+1] <- get_lee_carter_life_exp(df, c, g, y_start, y_lc ,y_end)['life_ex']
   }
   lc_le %>%
@@ -941,7 +941,6 @@ lee_carter_avg  <- function(df, c, g, y_start, y_lc ,y_end, nb){
   lc_le$quantile_90 <- quantiles[2,] 
   lc_le$quantile_10 <- quantiles[1,] 
   lc_le$Country <- c
-  #lc_le$Mean[1:y_start-y_lc+1] <- filter(life_table_pivot, Country == c , Year %in% y_start:y_lc, Gender == g)$life_ex
   lc_le %>% 
     select(c(Year, Mean, quantile_10, quantile_90, Country)) %>%
     filter(Year %in% y_lc:y_end)
@@ -975,7 +974,7 @@ lc_life_exp_compare_avg<- function(y_start, y_lc ,y_end, n, g){
     labs(colour = 'Country', linetype='data type')+
     scale_linetype_manual(labels = c("Mean Lee-Carter", "10%-ile", "90%-itle","real"),values =c("longdash","dotted","dotdash","solid"))+
     ylab("Life expectancy") +
-    ggtitle(paste("Lee carter forcast comparaison for ", y_lc,"->" ,y_end)) +
+    ggtitle(paste("Lee carter forcast comparaison for ", y_lc," ->" ,y_end)) +
     theme_bw()
   
   print(p)
@@ -984,13 +983,25 @@ lc_life_exp_compare_avg<- function(y_start, y_lc ,y_end, n, g){
 lc_life_exp_compare_avg(1945, 1995, 2050, 100, 'Both')
   
 ```
+If we exculde the years of WWII we can get mean life_expectancies very close to real life data, the sudden growth of the post-war era helps the dutch $k_t$ keep it upward trend while it doesn't affect the US Data since the civilian population was not impacted, at least directly, by the war.
+
+While in the plot below we fit from 1933 to 2000 and our drift doesn't account for the sudden drop in the mortality for the war impacted counties and our prediction paint a very dim prospect for the Netherlands with their life expactancy raching the level of the USA in 2016 while in reality they have around a 1.5 year advantage over the USA. 
+
+
 ``` {r}
 
 lc_life_exp_compare_avg(1933, 2000, 2050, 100, 'Both')
 
 
 ```
-- [ ] Compare with observed residual life expectations
+## Issues
+Our last attempts af find the right balance for the fit show that the Lee-Carter fit is very sensitive to overfitting, they year choices can be misleading and used to inintetionnally or dishonestly to pain a different picture from reality.
+The model is also greatly impacted by short but impactful events such as wars or other disaters. 
+It also suggest that current upward trends will continue even if they are due to specific medical advancments or other helpful factors that may not continue in the futur.
+
+Simply put this model while great for predicting the futur mortality based on current trends, it will struggle to account for external factors or time-limited events and sould be used and interpreted with great caution.
+
+Finally we sould explore other ways to get a more accurate $k$ vector, an obvious possibility is a better understanding of the drift and trying other possibilities. 
 
 # References
 
