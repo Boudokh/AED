@@ -1,23 +1,25 @@
 ---
 title: 'Homework II: SVD analysis & Life Tables'
-subtitle: 'Deadline: 2020-05-20'
 author: "Inès Dardouri, Mohamed Boudokhane and Lycia Fezzoua"
 date: "`r Sys.Date()`"
 output:
-  html_document:
-    fig_caption: yes
-    keep_md: yes
-    number_sections: yes
+  pdf_document:
     toc: yes
   html_notebook:
     code_folding: none
     number_sections: yes
     toc: yes
+  html_document:
+    fig_caption: yes
+    keep_md: yes
+    number_sections: yes
+    toc: yes
+subtitle: 'Deadline: 2020-05-20'
 params:
-    dirpath: '../LIFE_TABLES/lt_'
-    country_code: 'fr_t'
-    country: 'France'
-    timecourse: 1945:2015
+  country: France
+  country_code: fr_t
+  dirpath: ../LIFE_TABLES/lt_
+  timecourse: 1945:2015
 ---
 
 
@@ -73,6 +75,7 @@ pacman::p_load(viridis)
 pacman::p_load(CCA)
 pacman::p_load(vegan)
 pacman::p_load(corrplot)
+pacman::p_load(demography)
 
 old_theme <-theme_set(theme_dark(base_size=9,
                                  base_family = "Helvetica"))
@@ -89,7 +92,7 @@ knitr::opts_chunk$set(eval=FALSE,
 
 
 ```{r, echo=FALSE}
-country_code <- list(#fr_t='FRATNP',
+country_code <- list(fr_t='FRATNP',
                      fr_c='FRACNP',
                      be='BEL',
                      gb_t='GBRTENW',
@@ -98,9 +101,11 @@ country_code <- list(#fr_t='FRATNP',
                      it='ITA',
                      swe='SWE',
                      sp='ESP',
-                     us='USA')
+                     us='USA',
+                     ch='CHE',
+                     jp='JPN')
 
-countries <- c( 'fr_c', 'gb_t',  'nl', 'it', 'sp', 'swe', 'us')  
+countries <- c( 'fr_t', 'gb_t',  'nl', 'it', 'sp', 'swe', 'us', 'ch', 'jp')  
 
 country_names <- list(fr_t='France',     # total population
                      fr_c='France',      # civilian population
@@ -111,7 +116,9 @@ country_names <- list(fr_t='France',     # total population
                      it='Italy',
                      swe='Sweden',
                      sp='Spain',
-                     us='USA')
+                     us='USA',
+                     ch='Switzerland',
+                     jp='Japan')
 
 gender_names <- list('b'='Both',
                      'f'='Female',
@@ -242,17 +249,9 @@ count_na <- function(data){
   res
 }
 
-# for (data_f in l_f)
-#   retype(data_f) -> data_f
-# for (data_m in l_m)
-#   retype(data_m) -> data_m
-# for (data_b in l_b)
-#   retype(data_b) -> data_b
-#   glimpse(data_b)
-#   sapply(data_b, class)
-full_data <- ldply(out, data.frame) 
+life_table <- ldply(out, data.frame) 
 
-data_b_nl
+life_table
 ```
 
 
@@ -292,9 +291,6 @@ out %>%
 data_b_nl  %>%
   summarise_all(~ sum(is.na(.)))
 
-# typeof(data_b_nl)
-# typeof(out['data_b_nl'])
-
 ```
 
 # Western countries in 1948
@@ -305,7 +301,7 @@ Petite explication
 
 ```{r}
 
-p <- full_data %>%
+p <- life_table %>%
   filter(Year == '1948', Gender == 'Both') %>%
   ggplot(mapping=aes(x=Age, y=mx)) +
   geom_line(method="loess", se=FALSE, span=.5,aes(colour = forcats::as_factor(Country)), size = .2) +
@@ -328,15 +324,16 @@ central death rates in the USA in 1948.
 
 ```{r}
 ratio_us_1948 <- function(tab){
-  tab  %>%
-    filter(Gender == 'Both' ) %>%
-    mutate(ratio_us = mx/data_b_us$mx) %>%
-    filter(Year == 1948) -> tab
+  us_48 <- data_b_us %>%
+    filter(Gender == 'Both' ,Year == 1948) 
+  
+  tab %>%
+    filter(Gender == 'Both' ,Year == 1948) %>%
+    mutate(ratio_us = mx/us_48$mx) -> tab
   return(tab)
 }
 
 out_us <- purrr::map(out, ratio_us_1948)
-#print(out_us)
 
 p <- out_us %>%
   ldply( data.frame) %>%
@@ -358,19 +355,6 @@ print(p)
 ```
 
 
-```{r}
-
-# to delete
-for (df in out){
-  df %>%
-    filter(Gender == 'Both') %>%
-    mutate(ratio_us = data_b_us$qx/qx) %>%
-    filter(Year >= 1933) %>%
-    print()
-}
-
-```
-
 - [ ] Comment
 
 # Death rates evolution since WW II
@@ -384,7 +368,7 @@ Use aesthetics to distinguish years.
 after_ww_II <- seq(1946,2016, by = 10)
 
 
-p <- full_data %>%
+p <- life_table %>%
   filter(Year %in% after_ww_II, Gender != 'Both', Country %in% c('USA', 'Netherlands')) %>%
   ggplot(mapping=aes(x=Age, y=mx)) +
   geom_line(method="loess", se=FALSE, span=.5,aes(colour = forcats::as_factor(Year)), size = .2) +
@@ -459,7 +443,7 @@ ratio_mortality_rates <- function(df,
   df
 }
 
-ratio_mortality_rates(data_b_nl)
+ratio_mortality_rates(life_table)
 ```
 
 
@@ -495,7 +479,7 @@ q <- dplyr::filter(ratio_mortality_rates(data_b_nl), FALSE) %>%
   
 ```{r}
 (q  %+%
-  ratio_mortality_rates(data_b_nl) +
+  ratio_mortality_rates(life_table) +
    facet_grid(vars(Country),vars(Year)) +
   ggtitle("Variation of mortality quotient with respect to Y=1946, both genders")) %>%
   ggplotly()
@@ -509,10 +493,10 @@ q <- dplyr::filter(ratio_mortality_rates(data_b_nl), FALSE) %>%
 
 
 - [ ] Plot mortality quotients at ages $0, 1, 5$  as a function of time. Facet by Gender and Country
-```{r, fig.width=16, fig.height=16}
+```{r, fig.width=10, fig.height=16}
 ages <- c(0, 1, 5)
 
-mx_by_age <- full_data %>%
+mx_by_age <- life_table %>%
   filter(Age %in% ages, Gender != 'Both') %>%
   ggplot(mapping=aes(x=Year, y=mx)) +
   geom_line(size = 0.2, aes(colour =  forcats::as_factor(Age))) +
@@ -557,12 +541,12 @@ The resulting schema should look like:
 - [ ] Using `life_table_pivot` compute life expectancy at birth for each Country, Gender and Year
 
 ```{r}
-life_table_pivot <- full_data %>%
+life_table_pivot <- life_table %>%
   select(Country, Gender, Year, Age, mx) %>%
   tidyr::pivot_wider(names_from = "Age", values_from = "mx")
 
 
-life_table_pivot_log <- full_data %>%
+life_table_pivot_log <- life_table %>%
   select(Country, Gender, Year, Age, mx) %>%
   dplyr::mutate(mx=log(mx)) %>%
   tidyr::pivot_wider(names_from = "Age", values_from = "mx")
@@ -710,23 +694,6 @@ plot_pca(out_pivot_log$data_f_nl, TRUE, TRUE)
 #plot_pca(out_pivot_log$data_f_nl, TRUE, FALSE)
 #plot_pca(out_pivot_log$data_f_nl, FALSE, FALSE)
 ```
-
-```{r}
-pca_data <- out_pivot_log$data_f_nl
-pca_data[unlist(lapply(1948:2010, as.character)),] ->pca_data
-out_rex$data_b_nl[unlist(lapply(1948:2010, as.character)),1] -> rx
-pca_data <- cbind(pca_data, rx)
-res.pca = prcomp(pca_data, scale. = T, center = T)
-fviz_pca_ind(res.pca, repel = T)
-fviz_pca_var(res.pca,col.var = "contrib")
-fviz_eig(res.pca)
-
-```
-```{r}
-
-
-```
-
 
 
 - [ ] comment the screeplot
@@ -895,7 +862,7 @@ plot_mortality_lee_carter <- function(df, c, g, y_start, y_lc ,y_end, years){
     mutate(mx_lc = exp(mx_lc), Age = as.numeric(Age)) %>%
     filter(Year %in% years)
   
-  real_lt <- full_data %>%
+  real_lt <- life_table %>%
     filter(Country == c , Year %in% years, Gender == g ) %>%
     select(c(Year,Age,mx)) 
   
@@ -945,15 +912,17 @@ years <- seq(1935,1995, by = 20)
 plot_mortality_lee_carter(life_table_pivot_log, 'Netherlands', 'Male', 1933, 1995, 2040, years)
 ```
 
-```{r}
-years <- seq(2000,2015, by = 5)
-plot_mortality_lee_carter(life_table_pivot_log, 'USA', 'Male', 1933, 1995, 2040, years)
-```
+
 - [ ] Comment
 - [ ] Compare with rank-2 truncated SVD
 - [ ] Use the Lee-Carter model to predict the central death rates for years $2000$ up to $2015$
       Plot predictions and observations for years $2000, 2005, 2010, 2015$
-      
+```{r}
+
+years <- seq(2000,2015, by = 5)
+plot_mortality_lee_carter(life_table_pivot_log, 'USA', 'Male', 1933, 1995, 2040, years)
+
+```   
 ## Predictions of life expectancies at different ages
 
 - [ ] Use Lee-Carter approximation to approximate residual life expectations
