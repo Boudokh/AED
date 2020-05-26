@@ -61,6 +61,7 @@ pacman::p_load(foreach)
 pacman::p_load(iterators)
 pacman::p_load(DT)
 pacman::p_load(ade4)
+pacman::p_load(magrittr)
 pacman::p_load(FactoMineR)
 pacman::p_load(factoextra)
 pacman::p_load(FactoInvestigate)
@@ -71,10 +72,8 @@ pacman::p_load(CCA)
 pacman::p_load(vegan)
 pacman::p_load(corrplot)
 pacman::p_load(demography)
-
 old_theme <-theme_set(theme_dark(base_size=9,
                                  base_family = "Helvetica"))
-
 knitr::opts_chunk$set(eval=TRUE,
   echo=FALSE,
   warning = FALSE,
@@ -82,7 +81,6 @@ knitr::opts_chunk$set(eval=TRUE,
   cache = TRUE,
   autodep = TRUE,
   tidy = FALSE)
-
 ```
 
 
@@ -99,9 +97,7 @@ country_code <- list(fr_t='FRATNP',
                      us='USA',
                      ch='CHE',
                      jp='JPN')
-
 countries <- c( 'fr_t', 'gb_t',  'nl', 'it', 'sp', 'swe', 'us', 'ch', 'jp')  
-
 country_names <- list(fr_t='France',     # total population
                      fr_c='France',      # civilian population
                      be='Belgium',
@@ -114,21 +110,17 @@ country_names <- list(fr_t='France',     # total population
                      us='USA',
                      ch='Switzerland',
                      jp='Japan')
-
 gender_names <- list('b'='Both',
                      'f'='Female',
                      'm'='Male')
-
  
 ```
 
 
 ```{r load_tabble, warning=FALSE, message=FALSE, results="hide"}
-
 dirpath <- 'LIFE_TABLES/lt_'    
 suffix <- 'ltper_1x1.txt'
 mid <- 'ltper_1x1/'
-
 foreach(country=iter(countries), .combine = c) %do% {
   purrr::map2_chr(.x = c("both/b", "female/f", "male/m"),
                   .y = c("b", "f", "m"),
@@ -140,35 +132,25 @@ foreach(country=iter(countries), .combine = c) %do% {
                                   .y,
                                   suffix))
   }  -> file_paths
-
 df_names <- as.character(outer(c("b", "f", "m"),
                   countries,
                   FUN = function(s, c) stringr::str_c("data", s, c, sep="_")))
-
 out <- purrr::map(file_paths,
                   ~ readr::read_delim(., delim = " ",
                                       skip = 2,
                                       col_names = TRUE))
-
-
 names(out) <-  df_names
-
 purrr::map2(.x = out,
             .y=stringr::str_split(df_names, pattern = 'data_[m,f,b]_', simplify = TRUE)[,2],
             ~ mutate(.x, Country=country_names[[.y]])) -> out
-
 purrr::map2(.x = out,
             .y =stringr::str_split(df_names, pattern = '_', simplify = TRUE)[,2],
             ~ mutate(.x, Gender=gender_names[[.y]])) -> out
-
-
 list2env(x = out, envir = environment())
-
 ```
 ```{r inspect_tables,results="hide"}
 out['data_b_nl'] %>%
   glimpse()
-
 ```
 
 
@@ -197,31 +179,21 @@ But some of the columns need retyping:
 
 ```{r results="hide"}
 retype <- function(data){
-  require(magrittr)
-
   data %>%
     dplyr::rename_all(stringr::str_trim) ->
     data
-
   double_cols <-  c("mx", "qx", "ax", "ex")
   integer_cols <- setdiff(names(data), c(double_cols, "Country", "Gender"))
-
   data %>%
     dplyr::mutate_at(double_cols, as.numeric) %>%
     dplyr::mutate_at(integer_cols, as.integer) %>%
     dplyr::mutate_at(vars(Country,Gender), forcats::as_factor) %>%
     tidyr::drop_na(Age) -> data
-
-
   data
 }
-
 out %>%
   purrr::map(retype) -> out
-
-
 list2env(x = out, envir = environment())
-
 ```
 
 ```{r results="hide"}
@@ -230,9 +202,7 @@ count_na <- function(data){
     dplyr::summarise_all(.funs = ~sum(is.na(.)))-> res
   res
 }
-
 life_table <- ldply(out, data.frame) 
-
 life_table
 ```
 
@@ -269,29 +239,25 @@ out %>%
   purrr::map(~ sum(is.na(.))) %>%
   as.data.frame() %>%
   pivot_longer(cols= names(.), names_to="Data frame", values_to="# NAs")
-
 data_b_nl  %>%
   summarise_all(~ sum(is.na(.)))
-
 ```
 
 # Western countries in 1948
 
 * **Visualization of the central death rates of all Countries at all ages for year 1948 :**
 
-```{r, results="markup", fig.width=8, fig.height=3}
-
+```{r, results="markup", fig.width=8, fig.height=5}
 p <- life_table %>%
   filter(Year == '1948', Gender == 'Both') %>%
   ggplot(mapping=aes(x=Age, y=mx)) +
-  geom_line(method="loess", se=FALSE, span=.5,aes(colour = forcats::as_factor(Country)), size = .2) +
+  geom_line(span=.5,aes(colour = forcats::as_factor(Country)), size = .2) +
   scale_y_log10() +
   xlab("Age")+
   ylab("Death rates") +
   labs(colour = "Countries") +
   ggtitle("Central death rates at all ages for year 1948") +
   theme_bw()
-
 print(p)
 ```
 
@@ -302,32 +268,26 @@ We notice that the death rates for new borns are much higher for Italy and Spain
 ```{r fig.width=10, fig.height=3}
 ratio_us_year <- function(tab,year){
   us_year <- data_b_us %>%
-    filter(Gender == 'Both' ,Year == year) 
+    filter(Gender == 'Both' , Year == year) 
   
   tab %>%
     filter(Gender == 'Both' ,Year == year) %>%
     mutate(ratio_us = mx/us_year$mx) -> tab
   return(tab)
 }
-
 out_us_48 <- purrr::map(out, ratio_us_year, 1948)
-
 p <- out_us_48 %>%
   ldply( data.frame) %>%
   filter(Gender =='Both') %>%
   ggplot(mapping=aes(x=Age, y=ratio_us)) +
-  geom_smooth( aes(colour = forcats::as_factor(Country))) +
+  geom_smooth( aes(colour = forcats::as_factor(Country)), method="loess", se=FALSE) +
   scale_y_log10() +
   xlab("Age") +
   ylab("Death rates") +
   labs(colour = "Countries") +
   ggtitle("Ratios between central death rates in European countries and central death rates in the USA in 1948") +
   theme_bw()
-
-
 print(p)
-
-
 ```
 
 
@@ -335,50 +295,38 @@ We can see that the ratio between central death rate in Netherlands and central 
   
 * **Visualization of ratios between central death rates in European countries and central death rates in the USA in 1965 :** 
 ```{r fig.width=10, fig.height=3}
-
 out_us_65 <- purrr::map(out, ratio_us_year,1965)
-
 p <- out_us_65 %>%
   ldply( data.frame) %>%
   filter(Gender =='Both') %>%
   ggplot(mapping=aes(x=Age, y=ratio_us)) +
-  geom_smooth(aes(colour = forcats::as_factor(Country))) +
+  geom_smooth(aes(colour = forcats::as_factor(Country)), method="loess", se=FALSE) +
   scale_y_log10() +
   xlab("Age") +
   ylab("Death rates") +
   labs(colour = "Countries") +
   ggtitle("Ratios between central death rates in European countries and central death rates in the USA in 1965") +
   theme_bw()
-
-
 print(p)
-
-
 ```
 When we plot the same ratio but almost 20 years later, we can see the evolution of European countries' central death rates.
 Indeed, the ratio becomes lower than 1 for the middle ages, which means central death rates of European countries are approching USA's central death rates, even if it's still not the case at the extremities' ages. So, in 1965 Europe started regaining the health gap between her and the USA, comparing to what it was 20 years earlier
   
 * **Visualization of ratios between central death rates in European countries and central death rates in the USA in 2015 :** 
 ```{r fig.width=10, fig.height=3}
-
 out_us_15 <- purrr::map(out, ratio_us_year,2015)
-
 p <- out_us_15 %>%
   ldply( data.frame) %>%
   filter(Gender =='Both') %>%
   ggplot(mapping=aes(x=Age, y=ratio_us)) +
-  geom_smooth(aes(colour = forcats::as_factor(Country))) +
+  geom_smooth(aes(colour = forcats::as_factor(Country)) ,method="loess", se=FALSE ) +
   scale_y_log10() +
   xlab("Age") +
   ylab("Death rates") +
   labs(colour = "Countries") +
   ggtitle("Ratios between central death rates in European countries and central death rates in the USA in 2015") +
   theme_bw()
-
-
 print(p)
-
-
 ```
 
 And if we study again the same ratio but for the year 2015, we clearly see an inversion of the 1948's curve for most of the European countries. Europe's death rates are now much lower than USA death rates for ages from 0 to almost 75. In fact, the economical situation of the Europe was remarkably increasing since the end of the WWII and therefore its health situation. We also have to underline the fact that each country has its own health politics which can be more or less in favor of the population. But we also notice that the USA have always had lower death rates for the oldest ages than European countries, since the end of WWII. This may be explained by the fact that the USA care more about their elderly than about the rest of the population, or simply because more Europeans reach old ages then die quickly.  
@@ -389,12 +337,8 @@ And if we study again the same ratio but for the year 2015, we clearly see an in
 * **Visualization of mortality quotients (column `mx`) for both genders as a function of `Age` for  years `1946, 1956, ...` up to `2016` .**
 
 
-```{r fig.width=8, fig.height=3}
-
-
+```{r fig.width=8, fig.height=5}
 after_ww_II <- seq(1946,2016, by = 10)
-
-
 p <- life_table %>%
   filter(Year %in% after_ww_II, Gender != 'Both', Country %in% c('USA', 'Netherlands')) %>%
   ggplot(mapping=aes(x=Age, y=mx)) +
@@ -406,28 +350,15 @@ p <- life_table %>%
   facet_grid(vars(Gender),vars(Country)) +
   ggtitle("Mortality quotients for both genders as a function of Age since after WWII") +
   theme_bw()
-
 print(p)
-
-
-- [ ] Facet by `Gender`  and `Country`
-
-```{r}
-pacman::p_load(plotly)
-p %+%
-  facet_grid(vars(Gender),vars(Country)) +
-  ylab("Mortality quotients") 
 ```
+
+
 
 + Concerning the plot below:
 
-
-
-
-- Comment concerning the plot below:
 We notice that the mortality quotients of young people in 1946 is smaller in the USA than in all the European countries.
 This is certainly due to the fact that the USA didn't suffer a lot from human loss during the WWII, unlike the European countries.
-
 
 
 We modify our dataframe so it has the following schema:
@@ -454,18 +385,16 @@ ratio_mortality_rates <- function(df,
                                   target_years=seq(1946, 2016, 10)){
   
   dplyr::filter(df, Year %in% target_years) %>%
-  dplyr::inner_join(y=df[df$Year==1946, c("Age", "mx")], by=c("Age")) %>%
+  dplyr::inner_join(y=df[df$Year==1946, c("Age","Country", "mx")], by=c("Age","Country")) %>%
   dplyr::filter(Age <90) -> df
   df <- select (df,-c(qx,ax,lx,dx,Lx,Tx,ex ))
   df
 }
-
 ratio_mortality_rates(life_table)
 ```
 
 
 * **Visualization of the ratio  $m_{x,t}/m_{x, 1946}$ for ages $x \in 1, \ldots, 90$ and year $t$ for $t \in 1946, \ldots, 2016$ where $m_{x,t}$ is the central death rate at age $x$ during year  $t$ :**
-
 
 ```{r}
 q <- dplyr::filter(ratio_mortality_rates(data_b_nl), FALSE) %>%
@@ -477,46 +406,40 @@ q <- dplyr::filter(ratio_mortality_rates(data_b_nl), FALSE) %>%
   facet_wrap(vars(Year)) +
   ylab("Ratio of mortality rates, reference Year 1946") +
   labs(colour="Year", linetype="Year") +
-  scale_colour_brewer()
-
+  theme_bw()
 ```
 
 ```{r}
 (q  %+%
   ratio_mortality_rates(data_m_nl) +
-  ggtitle("Variation of mortality quotient with respect to Y=1946, Males in Netherlands")) %>%
-  ggplotly()
+  ggtitle("Variation of mortality quotient with respect to Y=1946, Males in Netherlands"))
 ```
 
 
 
 + We handle both genders and countries `Spain`, `Italy`, `France`, `England & Wales`, `USA`, `Sweden`, `Netherlands`.
-
+  
 ```{r}
-(q  %+%
-  ratio_mortality_rates(life_table) +
+(q  %+% 
+  ratio_mortality_rates(filter(life_table, Country %in% c("Netherlands","France", "USA"))) +
    facet_grid(vars(Country),vars(Year)) +
-  ggtitle("Variation of mortality quotient with respect to Y=1946, both genders")) %>%
-  ggplotly()
+  ggtitle("Variation of mortality quotient with respect to Y=1946, both genders"))
 ```
   
 But as we did since the beginning, we concentrate on the comparison between te USA and the Netherlands.
 
-```{r}
+```{r, fig.height=8, fig.width=12}
 half_full_data <- life_table %>%
   dplyr::filter(Country %in% c('Netherlands','USA'),Gender == 'Both')
-
 k <- dplyr::filter(ratio_mortality_rates(half_full_data), FALSE)%>%
   ggplot(aes(x=Age, y=mx.x/mx.y)) +
-  geom_smooth(method="loess",
-              se= FALSE,
+  geom_smooth(se= FALSE,
               size =.5,
               span= .2) +
   facet_wrap(vars(Year)) +
   ylab("Ratio of mortality rates, reference Year 1946") +
   labs(colour="Year", linetype="Year") +
   scale_colour_brewer()
-
 (k  %+% 
   ratio_mortality_rates(half_full_data) +
    facet_grid(vars(Country),vars(Year)) +
@@ -532,18 +455,16 @@ The ratio becomes higher in the USA than in the Netherlands for the age 25 since
 
 * **Visualization of mortality quotients at ages $0, 1, 5$  as a function of time, facetted by Gender and Country :**
 
-```{r fig.width=8, fig.height=16}
-
+```{r fig.width=10, fig.height=10}
 ages <- c(0, 1, 5)
-
 mx_by_age <- life_table %>%
-  filter(Age %in% ages, Gender != 'Both') %>%
+  filter(Age %in% ages, Gender != 'Both', Country %in% c('France','Italy', 'Spain', 'Netherlands','USA') ) %>%
   ggplot(mapping=aes(x=Year, y=mx)) +
-  geom_line(size = 0.2, aes(colour =  forcats::as_factor(Age))) +
+  geom_line(size = 0.4, aes(colour =  forcats::as_factor(Age))) +
   facet_grid(vars(Country), vars(Gender)) +
   scale_y_log10() +
   ylab("mortality quotients")+
-  labs(color = 'age') +
+  labs(color = 'Age') +
   theme_bw()
 mx_by_age
 ```
@@ -558,18 +479,16 @@ Also, for both the USA and our European country, the mortality quotients were ob
 
 ```{r, fig.width=8, fig.height=16}
 ages_2 <- c(15,20,40,60)
-
 mx_by_age_2 <- life_table %>%
-  filter(Age %in% ages_2, Gender != 'Both') %>%
+  filter(Age %in% ages_2, Gender != 'Both', Country %in% c('France','Italy', 'Spain', 'Netherlands','USA')) %>%
   ggplot(mapping=aes(x=Year, y=mx)) +
-  geom_line(size = 0.1, aes(colour =  forcats::as_factor(Age))) +
+  geom_line(size = 0.4, aes(colour =  forcats::as_factor(Age))) +
   facet_grid(vars(Country), vars(Gender)) +
   scale_y_log10() +
   ylab("Mortality quotients")+
   labs(color = 'Age') +
   ggtitle("Variation of mortality quotient at ages 15, 20, 40 and 60 as a function of time") +
   theme_bw()
-
 mx_by_age_2
 ```
 
@@ -607,25 +526,17 @@ The resulting schema looks like:
 life_table_pivot <- life_table %>%
   select(Country, Gender, Year, Age, mx) %>%
   tidyr::pivot_wider(names_from = "Age", values_from = "mx")
-
-
 life_table_pivot_log <- life_table %>%
   select(Country, Gender, Year, Age, mx) %>%
   dplyr::mutate(mx=log(mx)) %>%
   tidyr::pivot_wider(names_from = "Age", values_from = "mx")
-
-
 ex <- function(mx){
   sum(cumprod(1 - mx))
 }
-
-
 life_table_pivot %>%
     select(-c("Country","Gender","Year")) %>%
     apply(1, ex) -> life_table_pivot$life_ex 
-
 life_table_pivot  
-
 ```
 
 
@@ -654,15 +565,11 @@ conv_to_A <- function(data){
     
   data
 }
-
 rex <- function(mx, age){
   sum(cumprod(1-tail(mx, length(mx)-age)))  
 }
-
-
 full_rex <- function(lt)
 {
-
   conv_to_A(lt) -> A
   data.matrix(A) -> A
   
@@ -680,30 +587,29 @@ full_rex <- function(lt)
     }
   E
 }
+```
 
+
+```{r}
+out_pivot <- purrr::map(out, conv_to_A)
 out_rex <- purrr::map(out, full_rex)
-
+out_pivot_log <- purrr::map(out_pivot, log)
+#glimpse(out_pivot)
+#glimpse(out_rex)
 ```
 
 
 * **Visualization of residual life expectancy as a function of `Year` at ages $60$ and $65$, facetted by `Gender` and `Country` :**
 
-
 ```{r retirement, echo=FALSE, eval=FALSE}
-
-
 ages <- c(60, 65)
-
 re <- data_b_nl %>% 
   filter(as.numeric(Age) >= 60) %>%
   full_rex() %>%
   data.frame()
-
 names(re) <-60:109
-
 re %>% 
   rownames_to_column(var = "Year") -> re
-
 re %>%
   pivot_longer(-Year, names_to = "Age", values_to = "rex") %>%
   filter(Age %in% ages) %>%
@@ -714,7 +620,6 @@ re %>%
   geom_point(shape="+") +
   ggtitle('Residual life expectancy') +
   theme_bw()
-
 ```
 
 
@@ -727,28 +632,21 @@ central death rates. Once we did all that, we perform principal component analys
 
 
 ```{r}
-
-
-plot_pca<-function(data, sca, cen, c, g){
-  pca_data <- data %>%
-    filter(Country == c, Gender == g) %>%
-    remove_rownames %>% 
-    column_to_rownames(var="Year") -> data
-  
+plot_pca<-function(data, sca, cen){
+  pca_data <- data
   
   pca_data[unlist(lapply(1948:2010, as.character)),] ->pca_data
-  filter(life_table_pivot, Country == c, Year %in% 1948:2010, Gender == g)$life_ex -> rx
-  pca_data <- cbind(pca_data, rx) %>%
-    select(-c(Country, Gender))
+  out_rex$data_b_nl[unlist(lapply(1948:2010, as.character)),1] -> rx
+  pca_data <- cbind(pca_data, rx)
   res.pca = prcomp(pca_data, scale. = sca, center = cen)
   print(fviz_pca_ind(res.pca, repel = T))
   print(fviz_pca_var(res.pca,col.var = "contrib"))
   print(fviz_eig(res.pca))
 }
-plot_pca(life_table_pivot_log, TRUE, TRUE, 'Netherlands', 'Both')
-#plot_pca(out_pivot_log$data_f_nl, FALSE, TRUE, 'Netherlands', 'Both')
-#plot_pca(out_pivot_log$data_f_nl, TRUE, FALSE, 'Netherlands', 'Both')
-#plot_pca(out_pivot_log$data_f_nl, FALSE, FALSE, 'Netherlands', 'Both')
+plot_pca(out_pivot_log$data_f_nl, TRUE, TRUE)
+#plot_pca(out_pivot_log$data_f_nl, FALSE, TRUE)
+#plot_pca(out_pivot_log$data_f_nl, TRUE, FALSE)
+#plot_pca(out_pivot_log$data_f_nl, FALSE, FALSE)
 ```
 
 
@@ -764,88 +662,44 @@ We see on the correlation circle that the infant mortality is inversely correlat
 
 We see that the recent years are more distributed on the right side of the biplot, which means that they follow the direction of mx on the correlation circle. So the PCA allows us to conclude that the life expectancy is getting higher as time goes by
 
-
 # Canonical Correlation Analysis
 
-- [ ] Build a function that takes as input
-  + a dataframe like `life_table_pivot`,
-  + a couple  of countries, say `Spain` and `Sweeden`,
-  + a vector of `Year`, say `1948:1998`
-  + a `Gender` say `Female`
-  returns a matrix called $Z$ with rows corresponding to `Year` and columns
-  corresponding to couples `(Country, Age)`.
-
-
-- [ ] Perform a Canonical Correspondance Analysis of $Z$
++ We perform a Canonical Correspondance Analysis of $Z$ :
 
 ```{r}
-
 cnty <- c("USA", "Netherlands")
-
 life_table_pivot %>%
   filter(Country %in% cnty, Year %in% 1948:1998, Gender == 'Female' ) %>%
   select(-c("Gender","life_ex")) -> Z
-
 us <-Z %>%
   filter(Country == "USA" ) %>%
   select(-c("Country")) %>%
   column_to_rownames(var="Year") %>%
   as.matrix()
-
-
 nd <-Z %>%
   filter(Country == "Netherlands" ) %>%
   select(-c("Country")) %>%
   column_to_rownames(var="Year") %>%
   as.matrix()
-
 n = names(us)
-
 #names(us) <- c(n[1],paste(tail(n,length(n)-1) , "us", sep="-"))
 #names(nd) <- c(n[1],paste(tail(n,length(n)-1) , "nd", sep="-"))
-
 Z<-merge(nd,us)
-
 print(Z)
 #res.cc=cc(sp,nd)
 #plt.cc(res.cc)
-
 #cancor(sp, nd) -> cca
-
 correl <- matcor(us, nd )
-img.matcor(correl, type = 2)
-
-
+#img.matcor(correl, type = 2)
 cca_2 <- cancor(nd,us)
-
-plot(cca_2)
-
+#plot(cca_2)
 #plt.cc(cca, var.label = TRUE, ind.names = data[,1])
 #p.cca <- vegan::cca(Z)
 #plot(p.cca, type ='t')
 ```
 
 - [ ] Perform a Canonical Correspondance Analysis of $Z$
-```{r}
-data(Rohwer, package="heplots")
-X <- as.matrix(Rohwer[,6:10])  # the PA tests
-Y <- as.matrix(Rohwer[,3:5])  
-cc <- cancor(X, Y)
 
-plot(cc)
-```
-
-```{r}
-data(dune)
-data(dune.env)
-print(dune.env)
-mod <- cca(dune ~ A1 + Moisture + Management, dune.env)
-plot(mod)
-```
-
-```{r}
-
-```
 
 
 - [ ] Comment ...
