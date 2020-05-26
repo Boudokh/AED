@@ -496,7 +496,7 @@ The ratio becomes higher in the USA than in the Netherlands for the age 25 since
 
 
 - [ ] Plot mortality quotients at ages $0, 1, 5$  as a function of time. Facet by Gender and Country
-```{r, fig.width=10, fig.height=16}
+```{r, fig.width=8, fig.height=16}
 ages <- c(0, 1, 5)
 
 mx_by_age <- life_table %>%
@@ -508,7 +508,6 @@ mx_by_age <- life_table %>%
   ylab("mortality quotients")+
   labs(color = 'age') +
   theme_bw()
-
 mx_by_age
 ```
 
@@ -519,6 +518,7 @@ We can see some noticable peaks for the Netherlands corresponding to the two wor
 Also, for both the USA and our European country, the mortality quotients were obviously higher 100 years ago than what they are nowadays. 
 
 - [ ] Plot mortality quotients at ages $15, 20, 40, 60$  as a function of time. Facet by `Gender` and `Country`
+```{r, fig.width=8, fig.height=16}
 ages_2 <- c(15,20,40,60)
 
 mx_by_age_2 <- life_table %>%
