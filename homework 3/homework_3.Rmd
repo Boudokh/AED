@@ -3,16 +3,16 @@ title: 'Homework II: SVD analysis & Life Tables'
 author: "Inès Dardouri, Mohamed Boudokhane and Lycia Fezzoua"
 date: "`r Sys.Date()`"
 output:
-  pdf_document:
+  html_document:
+    fig_caption: yes
+    keep_md: yes
+    number_sections: yes
     toc: yes
   html_notebook:
     code_folding: none
     number_sections: yes
     toc: yes
-  html_document:
-    fig_caption: yes
-    keep_md: yes
-    number_sections: yes
+  pdf_document:
     toc: yes
 subtitle: 'Deadline: 2020-05-20'
 params:
@@ -25,19 +25,25 @@ params:
 
 ---
 
-# Objectives
+#Introduction and objectives
 
-This notebook aims at
 
-  - working with **tables** (`data.frames`, `tibbles`, `data.tables`, ...) using `dplyr` or any other query language (as provided for example by `data.table`)
-  - visualizing demographic data as provided by [Human Mortality Database organization](https://www.mortality.org).
-  - using PCA and other matrix oriented methods (CCA) to explore a multivariate datasets (lifetables may be considered as multivariate datasets)
+This research work consists in making a demographic study on the mortality rates of several population of the world,describing different countries of Europe and the United States, based on different factors, such as gender and age.
+As we aim to make a comparison between Europe and USA, we chose to concentrate our study on one particular European country all along the work, to be consistent.
+Our choice fell on the Netherlands because it is a country that has been affected by the war, but which is relatively small (17.28 million inhabitants), rich and industrialized. We want to explore its future and compare it to the USA's.
+The study mainly focuses on the "mortality quotient" at a certain age, and according to different years. The mortality quotient is interpreted by the probability for people surviving at this age, to die before the following age.
+
+The objective of this work is to:
+*Make demographic visualizations for mortality data over time, according to age and gender. This allows us to understand and explore the way in which mortality indicators evolve by age group and to deduce the factors that impact them.
+*Use the PCA (Principal Component Analysis) and CCA(Canonical-Correspondence-Analysis) methods for the exploration of multivariate datasets and the study of link structures on all variables.
+
+*Use of a mathematical model "Lee Carter" which gives us the possibility to make predictions and adjustments of the mortality rates over time according to age.
 
 # Life tables data (ETL)
 
 We investigate life tables describing countries from Western Europe (France, Great Britain --actually England and Wales--, Italy, the Netherlands, Spain, and Sweden) and the United States.
 
-We load the one-year lifetables for female, male and whole population for the different countries.
+We load the one-year life tables for female, male and whole population for the different countries.
 
 
 ```{r, echo=FALSE, eval=FALSE}
@@ -229,9 +235,9 @@ the following.
 |  Country    | factor      |
 |  Gender     | factor      |
 
-Coercion introduces a subtantial number of NA  warnings.
+Coercion introduces a substantial number of NA  warnings.
 Preliminary inspection of the data suggests that coercion problems
-orginate from column `Age`: `110+` cannot be coerced to an integer value.
+originate from column `Age`: `110+` cannot be coerced to an integer value.
 We discard corresponding rows using `tidyr::drop_na(Age)`.
 
 ```{r result="hide"}
@@ -251,7 +257,7 @@ data_b_nl  %>%
 p <- life_table %>%
   filter(Year == '1948', Gender == 'Both') %>%
   ggplot(mapping=aes(x=Age, y=mx)) +
-  geom_line(span=.5,aes(colour = forcats::as_factor(Country)), size = .2) +
+  geom_line(aes(colour = forcats::as_factor(Country)), size = .2) +
   scale_y_log10() +
   xlab("Age")+
   ylab("Death rates") +
@@ -261,7 +267,7 @@ p <- life_table %>%
 print(p)
 ```
 
-We notice that the death rates for new borns are much higher for Italy and Spain than for the rest of the european countries and for the USA. This difference is still noticable for infant mortality. But for the adults, the death rates are pretty much the same for all countries. The difference for young people's mortality could be explained by the different economic and health conditions at that time between the different countries. 
+We notice that the death rates for newborns are much higher for Italy and Spain than for the rest of the european countries and for the USA. This difference is still noticable for infant mortality. But for the adults, the death rates are pretty much the same for all countries. The difference for young people's mortality could be explained by the different economic and health conditions at that time between the different countries. 
   
 * **Visualization of ratios between central death rates in European countries and central death rates in the USA in 1948 :** 
 
@@ -342,7 +348,7 @@ after_ww_II <- seq(1946,2016, by = 10)
 p <- life_table %>%
   filter(Year %in% after_ww_II, Gender != 'Both', Country %in% c('USA', 'Netherlands')) %>%
   ggplot(mapping=aes(x=Age, y=mx)) +
-  geom_line(method="loess", se=FALSE, span=.5,aes(colour = forcats::as_factor(Year)), size = .2) +
+  geom_line(aes(colour = forcats::as_factor(Year)), size = .2) +
   scale_y_log10() +
   xlab("Age")+
   ylab("Mortality quotients") +
@@ -685,7 +691,7 @@ n = names(us)
 #names(us) <- c(n[1],paste(tail(n,length(n)-1) , "us", sep="-"))
 #names(nd) <- c(n[1],paste(tail(n,length(n)-1) , "nd", sep="-"))
 Z<-merge(nd,us)
-print(Z)
+
 #res.cc=cc(sp,nd)
 #plt.cc(res.cc)
 #cancor(sp, nd) -> cca
@@ -734,11 +740,11 @@ and $\epsilon_{x,t}$ are i.i.d Gaussian random variables.
 
 To estimate our vectors we have used the SVD decomposition  \[M = UDV^T\]
 
-\[a_x\] and \[b_x = \frac{V_{x,1}}{\sum_{x} V_{.,1}} \] are the age dependent elements of our model and will be used for the rest of the modelisation.
+$a_x$ and $b_x = \frac{V_{x,1}}{\sum_{x} V_{.,1}}$ are the age dependent elements of our model and will be used for the rest of the modelisation.
 
 \[k_t = D_1* U_{1,x} * \sum_{x} V_{.,1} \] is the time (Year) dependent element of the Lee-carter model, each value of this vector corresponds to a year.
 
-The following graphs show that our Lee-Carter fit raging from 1933 to 1995 of US mortality data is acceptable and we can proceed with the prediction of our futur \[ k_t\] values.
+The following graphs show that our Lee-Carter fit raging from 1933 to 1995 of US mortality data is acceptable and we can proceed with the prediction of our futur $k_t$ values.
 
 ## US data
 - [ ] Fit a Lee-Carter model on the American data (for Male and Female data) training on years `1933` up to `1995`.
@@ -765,7 +771,7 @@ Lee_carter_fit<- function(df, c, g, y_start, y_lc ,y_end){
   drift_len = y_lc - y_start
   drift =(k_t[length(k_t)]-k_t[1])/length(k_t)
   for (i in 1:(y_end-y_lc)){
-    eps  = rnorm(1, mean = drift, sd = sqrt(sd(k_t))/2)
+    eps  = rnorm(1, mean = drift, sd = sqrt(sd(k_t)/2))
     k_t <- cbind(k_t,k_t[length(k_t)] + eps)
   }
   
@@ -804,13 +810,14 @@ plot_mortality_lee_carter <- function(df, c, g, y_start, y_lc ,y_end, years){
     select(c(Year,mx, mx_lc, Age)) %>%
     pivot_longer(-c(Year,Age),names_to = "method", values_to = "mx_n") %>%        
     ggplot(mapping=aes(x=Age, y=mx_n)) +
-    geom_line(method="loess", se=FALSE, span=.5,aes(colour = forcats::as_factor(method)), size = .2) +
+    geom_line(aes(colour = forcats::as_factor(method)), size = .2) +
     scale_y_log10() +
     xlab("Age")+
     ylab("Mortality quotients") +
-    labs(colour = "Mx method") +
+    labs(colour = "Method") +
     facet_wrap(~ Year) +
     ggtitle("Lee carter fit comparaison") +
+    scale_colour_discrete(labels = c('real', 'Lee-Carter')) +
     theme_bw() 
   print(lc_plot)
 }
@@ -828,9 +835,9 @@ plot_mortality_lee_carter(life_table_pivot_log, 'USA', 'Male', 1933, 1995, 2040,
       
 For the prediction we have used a random walk as mentionned in the 1992 publication by Ronald Lee:
 
-\[k_{t} = k_{t-1} + d + \epsilon \] with d being the drift and epsilon a gaussian random variable with the same standard deviation as \[k_t\].
+\[k_{t} = k_{t-1} + d + \epsilon \] with d being the drift and epsilon a gaussian random variable with the same standard deviation as $k_t$.
 the drift is the trickiest part to estimate, it has a massive impact on the trend of ou prediction, we setteled on \[d = \frac{k_T - k_1}{T}\] 
-which. We have used the same function as the one used for the fit and just concatenate the new \[k\] values to the fitted vector. the resulting matrix will have x lines corresponding to the fitted values and y lines for the predicted years.   
+which. We have used the same function as the one used for the fit and just concatenate the new $k$ values to the fitted vector. the resulting matrix will have x lines corresponding to the fitted values and y lines for the predicted years.   
 
 
 - [ ] Plot predictions and observations for years $2000, 2005, 2010, 2015$
@@ -888,22 +895,30 @@ get_lee_carter_life_exp <- function(df, c, g, y_start, y_lc ,y_end){
 }
 
 
-lt_lc_us <- get_lee_carter_life_exp(life_table_pivot_log, 'USA', 'Female', 1933, 1995, 2040)
+lt_lc_us <- get_lee_carter_life_exp(life_table_pivot_log, 'USA', 'Female', 1933, 1995, 2017)
+names(lt_lc_us)[2] <- "life_exp_lc"
 
 
-p <- lt_lc_us %>%
-  ggplot(mapping=aes(x=Year, y=life_ex)) +
-  geom_line(method="loess", se=FALSE, span=.5, size = .2) +
+names(lt_lc_us)
+life_table_pivot %>%
+  filter(Country %in% c("USA") , Year %in% 1933:2017, Gender == 'Female') %>%
+  select(c(Year,life_ex)) %>%
+  cbind(lt_lc_us) %>%
+  pivot_longer(-c(Year),names_to = "type", values_to = "life_exp") %>%
+  filter(Year %in% 1995:2017) %>%
+  ggplot(mapping=aes(x=Year, y=life_exp, colour=type)) +
+  geom_line( size = .2) +
   scale_y_log10() +
+  labs(colour = 'Method')+
   xlab("Year")+
   ylab("Life expectancy") +
-  ggtitle("Lee carter fit comparaison") +
+  scale_colour_discrete(labels = c('real', 'Lee-Carter')) +
+  ggtitle("Lee-Carter prediction comparaison for USA 1995-2017") +
   theme_bw()
 
-print(p)
-
-
 ```
+
+
 
 ```{r}
 
@@ -933,42 +948,48 @@ lee_carter_avg  <- function(df, c, g, y_start, y_lc ,y_end, nb){
 }
 
 
-y_start = 1945
-y_lc = 1995
-y_end = 2050
-g = "Both"
-us_le_lc <- lee_carter_avg(life_table_pivot_log, 'USA', g,  y_start, y_lc ,y_end, 50)
-nl_le_lc <- lee_carter_avg(life_table_pivot_log, 'Netherlands', g,  y_start, y_lc ,y_end, 50)
-sw_le_lc <- lee_carter_avg(life_table_pivot_log, 'Sweden', g,  y_start, y_lc ,y_end, 50)
 
-
-life_table_pivot %>%
-  filter(Country %in% c("USA","Netherlands") , Year %in% y_start:2015, Gender == g) %>%
-  select(c(Year, Country,life_ex)) %>%
-  pivot_longer(-c(Year,Country),names_to = "Percentile", values_to = "life_exp") -> real_lexp
 ```
 
 ``` {r}
 
-p <- rbind(us_le_lc, nl_le_lc) %>%
-  select(c(Year,Mean,quantile_10,quantile_90,Country )) %>%
-  pivot_longer(-c(Year,Country),names_to = "Percentile", values_to = "life_exp") %>%
-  rbind(real_lexp) %>%
-  ggplot() +
-  geom_line(aes(x=Year, y=life_exp,linetype=forcats::as_factor(Percentile), colour = forcats::as_factor(Country)),method="loess", se=FALSE, span=.5, size = .2) +
-  #geom_line(data=real_lexp, map=aes(x=Year, y=life_ex, colour = forcats::as_factor(Country)),method="loess", se=FALSE, span=.5, size = .2) +
-  scale_y_log10() +
-  xlab("Year")+
-  ylab("Life expectancy") +
-  labs(colour = "Mx method") +
-  ggtitle("Lee carter fit comparaison") +
-  theme_bw()
+lc_life_exp_compare_avg<- function(y_start, y_lc ,y_end, n, g){
+  
+  us_le_lc <- lee_carter_avg(life_table_pivot_log, 'USA', g,  y_start, y_lc ,y_end, n)
+  nl_le_lc <- lee_carter_avg(life_table_pivot_log, 'Netherlands', g,  y_start, y_lc ,y_end, n)
+  
+  life_table_pivot %>%
+    filter(Country %in% c("USA","Netherlands") , Year %in% y_start:2015, Gender == g) %>%
+    select(c(Year, Country,life_ex)) %>%
+    pivot_longer(-c(Year,Country),names_to = "Percentile", values_to = "life_exp") -> real_lexp
+  
+  p <- rbind(us_le_lc, nl_le_lc) %>%
+    select(c(Year,Mean,quantile_10,quantile_90,Country )) %>%
+    pivot_longer(-c(Year,Country),names_to = "Percentile", values_to = "life_exp") %>%
+    rbind(real_lexp) %>%
+    ggplot() +
+    geom_line(aes(x=Year, y=life_exp,linetype=forcats::as_factor(Percentile), colour = forcats::as_factor(Country)), size = .4) +
+    #geom_line(data=real_lexp, map=aes(x=Year, y=life_ex, colour = forcats::as_factor(Country)),size = .2) +
+    scale_y_log10() +
+    xlab("Year")+
+    labs(colour = 'Country', linetype='data type')+
+    scale_linetype_manual(labels = c("Mean Lee-Carter", "10%-ile", "90%-itle","real"),values =c("longdash","dotted","dotdash","solid"))+
+    ylab("Life expectancy") +
+    ggtitle(paste("Lee carter forcast comparaison for ", y_lc,"->" ,y_end)) +
+    theme_bw()
+  
+  print(p)
+}
 
-print(p)
-
+lc_life_exp_compare_avg(1945, 1995, 2050, 100, 'Both')
   
 ```
+``` {r}
 
+lc_life_exp_compare_avg(1933, 2000, 2050, 100, 'Both')
+
+
+```
 - [ ] Compare with observed residual life expectations
 
 # References
