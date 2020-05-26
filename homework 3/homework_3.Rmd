@@ -35,15 +35,10 @@ This notebook aims at
 
 # Life tables data (ETL)
 
-Life data tables are downloaded from [https://www.mortality.org](https://www.mortality.org).
-
-See also [https://www.lifetable.de](https://www.lifetable.de).
-
-If you install and load package [https://cran.r-project.org/web/packages/demography/index.html](https://cran.r-project.org/web/packages/demography/index.html), you will also find life data tables.
-
 We investigate life tables describing countries from Western Europe (France, Great Britain --actually England and Wales--, Italy, the Netherlands, Spain, and Sweden) and the United States.
 
 We load the one-year lifetables for female, male and whole population for the different countries.
+
 
 ```{r, echo=FALSE, eval=FALSE}
 # for debugging
@@ -80,7 +75,7 @@ pacman::p_load(demography)
 old_theme <-theme_set(theme_dark(base_size=9,
                                  base_family = "Helvetica"))
 
-knitr::opts_chunk$set(eval=FALSE,
+knitr::opts_chunk$set(eval=TRUE,
   echo=FALSE,
   warning = FALSE,
   message = FALSE,
@@ -128,7 +123,7 @@ gender_names <- list('b'='Both',
 ```
 
 
-```{r load_tabble, warning=FALSE, message=FALSE}
+```{r load_tabble, warning=FALSE, message=FALSE, results="hide"}
 
 dirpath <- 'LIFE_TABLES/lt_'    
 suffix <- 'ltper_1x1.txt'
@@ -170,14 +165,14 @@ purrr::map2(.x = out,
 list2env(x = out, envir = environment())
 
 ```
-```{r inspect_tables}
+```{r inspect_tables,results="hide"}
 out['data_b_nl'] %>%
   glimpse()
 
 ```
 
 
-Check on [http://www.mortality.org](http://www.mortality.org) the meaning of the different columns:
+The meaning of the different columns:
 
 `mx`: Central death rate between ages x and x+n where n=1, 4, 5, or ∞ (open age interval)
 
@@ -192,20 +187,7 @@ Check on [http://www.mortality.org](http://www.mortality.org) the meaning of the
 `ex`:: Life expectancy at exact age x (in years)
 
 
-Document [Tables de mortalité françaises pour les XIXe et XXe siècles et projections pour le XXIe siècle](https://www.lifetable.de/data/FRA/FRA000018061997CY1.pdf) contains
-detailed information on the construction of Life Tables for France.
-Two kinds of Life Tables can be distinguished: *Table du moment* which
-contain for each calendar year, the mortality risks at different ages for that very year; and *Tables de génération* which contain for a given birthyear, the   mortality risks
-at which an individual born during that year has been exposed. The life tables investigated in this homework are *Table du moment*. According to the document by Vallin and Meslé, building the life tables  required decisions and doctoring.
-
-See (among other things)
-
-- p. 19 Abrupt changes in mortality quotients at some ages for a given calendar year
-- Estimating mortality quotients at great age.
-
-Have a look at [Lexis diagram](https://en.wikipedia.org/wiki/Lexis_diagram).
-
-Some columns need retyping:
+But some of the columns need retyping:
 
 - `Year`: should be integer
 - `Age`:  needs some cleaning, after cleaning it should be typed as integer
@@ -213,7 +195,7 @@ Some columns need retyping:
 - `Tx`: should be integer
 - Other columns should be considered as floating point numbers (`numeric`)
 
-```{r}
+```{r results="hide"}
 retype <- function(data){
   require(magrittr)
 
@@ -242,7 +224,7 @@ list2env(x = out, envir = environment())
 
 ```
 
-```{r}
+```{r results="hide"}
 count_na <- function(data){
   data %>%
     dplyr::summarise_all(.funs = ~sum(is.na(.)))-> res
@@ -257,9 +239,9 @@ life_table
 
 ---
 
-- [ ] After ETL processing, you obtain a universal table encompassing
+- After ETL processing, we obtain a universal table encompassing
 all data available  in the files located in `LIFE_TABLES` directory.
-Henceforth, the universal table is named `life_table`, its schema should be
+Henceforth, the universal table is named `life_table`, its schema is
 the following.
 
 | Column Name | Column Type |
@@ -280,9 +262,9 @@ the following.
 Coercion introduces a subtantial number of NA  warnings.
 Preliminary inspection of the data suggests that coercion problems
 orginate from column `Age`: `110+` cannot be coerced to an integer value.
-Discard corresponding rows using `tidyr::drop_na(Age)`.
+We discard corresponding rows using `tidyr::drop_na(Age)`.
 
-```{r}
+```{r result="hide"}
 out %>%
   purrr::map(~ sum(is.na(.))) %>%
   as.data.frame() %>%
@@ -295,11 +277,9 @@ data_b_nl  %>%
 
 # Western countries in 1948
 
-- [ ] Plot the central death rates of all Countries at all ages for year 1948.
+* **Visualization of the central death rates of all Countries at all ages for year 1948 :**
 
-Petite explication
-
-```{r}
+```{r, results="markup", fig.width=8, fig.height=3}
 
 p <- life_table %>%
   filter(Year == '1948', Gender == 'Both') %>%
@@ -315,37 +295,33 @@ p <- life_table %>%
 print(p)
 ```
 
-- [ ] Comment.
-
 We notice that the death rates for new borns are much higher for Italy and Spain than for the rest of the european countries and for the USA. This difference is still noticable for infant mortality. But for the adults, the death rates are pretty much the same for all countries. The difference for young people's mortality could be explained by the different economic and health conditions at that time between the different countries. 
   
-- [ ] Plot ratios between central death rates in European countries and
-central death rates in the USA in 1948.
+* **Visualization of ratios between central death rates in European countries and central death rates in the USA in 1948 :** 
 
-```{r}
-ratio_us_1948 <- function(tab){
-  us_48 <- data_b_us %>%
-    filter(Gender == 'Both' ,Year == 1948) 
+```{r fig.width=10, fig.height=3}
+ratio_us_year <- function(tab,year){
+  us_year <- data_b_us %>%
+    filter(Gender == 'Both' ,Year == year) 
   
   tab %>%
-    filter(Gender == 'Both' ,Year == 1948) %>%
-    mutate(ratio_us = mx/us_48$mx) -> tab
+    filter(Gender == 'Both' ,Year == year) %>%
+    mutate(ratio_us = mx/us_year$mx) -> tab
   return(tab)
 }
 
-out_us <- purrr::map(out, ratio_us_1948)
+out_us_48 <- purrr::map(out, ratio_us_year, 1948)
 
-p <- out_us %>%
+p <- out_us_48 %>%
   ldply( data.frame) %>%
-  print() %>%
   filter(Gender =='Both') %>%
   ggplot(mapping=aes(x=Age, y=ratio_us)) +
-  geom_line( span=.5,aes(colour = forcats::as_factor(Country)), size = .2) +
+  geom_smooth( aes(colour = forcats::as_factor(Country))) +
   scale_y_log10() +
   xlab("Age") +
   ylab("Death rates") +
   labs(colour = "Countries") +
-  ggtitle("Central death rates at all ages for year 1948") +
+  ggtitle("Ratios between central death rates in European countries and central death rates in the USA in 1948") +
   theme_bw()
 
 
@@ -355,15 +331,65 @@ print(p)
 ```
 
 
-- [ ] Comment
+We can see that the ratio between central death rate in Netherlands and central death rate in the USA is less than 1 for almost all the ages except the oldest ones, which means that the central death rate in Netherlands is lower than central death rate in the USA in 1948. But we can also see that this ratio is greater than 1 for almost all the other European countries (except Sweden), which means that the central death rate in the majority of the European countries is higher than the central death rate in the USA in 1948, especially for France and Spain. This difference could be explained by the health conditions and the financial situation of the two continents at that time.
+  
+* **Visualization of ratios between central death rates in European countries and central death rates in the USA in 1965 :** 
+```{r fig.width=10, fig.height=3}
+
+out_us_65 <- purrr::map(out, ratio_us_year,1965)
+
+p <- out_us_65 %>%
+  ldply( data.frame) %>%
+  filter(Gender =='Both') %>%
+  ggplot(mapping=aes(x=Age, y=ratio_us)) +
+  geom_smooth(aes(colour = forcats::as_factor(Country))) +
+  scale_y_log10() +
+  xlab("Age") +
+  ylab("Death rates") +
+  labs(colour = "Countries") +
+  ggtitle("Ratios between central death rates in European countries and central death rates in the USA in 1965") +
+  theme_bw()
+
+
+print(p)
+
+
+```
+When we plot the same ratio but almost 20 years later, we can see the evolution of European countries' central death rates.
+Indeed, the ratio becomes lower than 1 for the middle ages, which means central death rates of European countries are approching USA's central death rates, even if it's still not the case at the extremities' ages. So, in 1965 Europe started regaining the health gap between her and the USA, comparing to what it was 20 years earlier
+  
+* **Visualization of ratios between central death rates in European countries and central death rates in the USA in 2015 :** 
+```{r fig.width=10, fig.height=3}
+
+out_us_15 <- purrr::map(out, ratio_us_year,2015)
+
+p <- out_us_15 %>%
+  ldply( data.frame) %>%
+  filter(Gender =='Both') %>%
+  ggplot(mapping=aes(x=Age, y=ratio_us)) +
+  geom_smooth(aes(colour = forcats::as_factor(Country))) +
+  scale_y_log10() +
+  xlab("Age") +
+  ylab("Death rates") +
+  labs(colour = "Countries") +
+  ggtitle("Ratios between central death rates in European countries and central death rates in the USA in 2015") +
+  theme_bw()
+
+
+print(p)
+
+
+```
+
+And if we study again the same ratio but for the year 2015, we clearly see an inversion of the 1948's curve for most of the European countries. Europe's death rates are now much lower than USA death rates for ages from 0 to almost 75. In fact, the economical situation of the Europe was remarkably increasing since the end of the WWII and therefore its health situation. We also have to underline the fact that each country has its own health politics which can be more or less in favor of the population. But we also notice that the USA have always had lower death rates for the oldest ages than European countries, since the end of WWII. This may be explained by the fact that the USA care more about their elderly than about the rest of the population, or simply because more Europeans reach old ages then die quickly.  
+
 
 # Death rates evolution since WW II
 
-- [ ] Plot mortality quotients (column `mx`) for
-both genders as a function of `Age` for  years `1946, 1956, ...` up to `2016` .
-Use aesthetics to distinguish years.
+* **Visualization of mortality quotients (column `mx`) for both genders as a function of `Age` for  years `1946, 1956, ...` up to `2016` .**
 
-```{r}
+
+```{r fig.width=8, fig.height=3}
 
 after_ww_II <- seq(1946,2016, by = 10)
 
@@ -387,33 +413,13 @@ print(p)
 
 
 
-- [ ] Facet by `Gender`  and `Country`
++ Concerning the plot below:
 
-```{r}
-pacman::p_load(plotly)
-p %+%
-  facet_grid(vars(Gender),vars(Country)) +
-  ylab("Mortality quotients") 
-
-
-```
-
-
-- Comment concerning the plot below:
 We notice that the mortality quotients of young people in 1946 is smaller in the USA than in all the European countries.
 This is certainly due to the fact that the USA didn't suffer a lot from human loss during the WWII, unlike the European countries.
 
 
-
-- [ ] Write a function `ratio_mortality_rates` with signature
-`function(df, reference_year=1946, target_years=seq(1946, 2016, 10))`
-that takes as input:
-
-  - a dataframe with the same schema as `life_table`,
-  - a reference year `ref_year` and
-  - a sequence of years `target_years`
-
-and that returns a dataframe with schema:
+We modify our dataframe so it has the following schema:
 
 
 | Column Name | Column Type |
@@ -431,7 +437,7 @@ whereas `mx_ref_year` denotes central death rate at `Age` for argument `referenc
 in `Country` for `Gender`.
 
 
-```{r}
+```{r, results="hide"}
 ratio_mortality_rates <- function(df,
                                   reference_year=1946,
                                   target_years=seq(1946, 2016, 10)){
@@ -447,9 +453,7 @@ ratio_mortality_rates(life_table)
 ```
 
 
-- [ ] Draw plots displaying the ratio  $m_{x,t}/m_{x, 1946}$ for ages $x \in 1, \ldots, 90$
-and year $t$ for $t \in 1946, \ldots, 2016$ where $m_{x,t}$ is the central death rate
-at age $x$ during year  $t$.
+* **Visualization of the ratio  $m_{x,t}/m_{x, 1946}$ for ages $x \in 1, \ldots, 90$ and year $t$ for $t \in 1946, \ldots, 2016$ where $m_{x,t}$ is the central death rate at age $x$ during year  $t$ :**
 
 ```{r}
 q <- dplyr::filter(ratio_mortality_rates(data_b_nl), FALSE) %>%
@@ -474,8 +478,7 @@ q <- dplyr::filter(ratio_mortality_rates(data_b_nl), FALSE) %>%
 
 
 
-  1. Handle both genders and countries `Spain`, `Italy`, `France`, `England & Wales`, `USA`, `Sweden`, `Netherlands`.
-  1. One properly facetted plot is enough.
++ We handle both genders and countries `Spain`, `Italy`, `France`, `England & Wales`, `USA`, `Sweden`, `Netherlands`.
   
 ```{r}
 (q  %+%
@@ -485,8 +488,29 @@ q <- dplyr::filter(ratio_mortality_rates(data_b_nl), FALSE) %>%
   ggplotly()
 ```
   
+But as we did since the beginning, we concentrate on the comparison between te USA and the Netherlands.
 
-- [ ] Comment
+```{r}
+half_full_data <- life_table %>%
+  dplyr::filter(Country %in% c('Netherlands','USA'),Gender == 'Both')
+
+k <- dplyr::filter(ratio_mortality_rates(half_full_data), FALSE)%>%
+  ggplot(aes(x=Age, y=mx.x/mx.y)) +
+  geom_smooth(method="loess",
+              se= FALSE,
+              size =.5,
+              span= .2) +
+  facet_wrap(vars(Year)) +
+  ylab("Ratio of mortality rates, reference Year 1946") +
+  labs(colour="Year", linetype="Year") +
+  scale_colour_brewer()
+
+(k  %+% 
+  ratio_mortality_rates(half_full_data) +
+   facet_grid(vars(Country),vars(Year)) +
+  ggtitle("Variation of mortality quotient with respect to Y=1946, both genders")) +
+  theme_bw()
+```
 
 In the USA, the ratio of mortality rates between all the years after 1946 and the year 1946 has always been under 1 for all ages, which meens that since 1946 people die less in the USA than in 1946. Whereas in the Netherlands, this ratio has been higher than in the USA for all years and especially for the older ages.
 We also notice a difference for the new borns between the two countries : the ratio is twice higher for the USA in 1956 than in the Netherlands, which means that the mortality rate in 1946 was much higher in the Netherlands compared to the other years, whereas the difference is smaller for the USA between 1946 and the other years.
@@ -494,9 +518,10 @@ The ratio becomes higher in the USA than in the Netherlands for the age 25 since
 
 # Trends
 
+* **Visualization of mortality quotients at ages $0, 1, 5$  as a function of time, facetted by Gender and Country :**
 
-- [ ] Plot mortality quotients at ages $0, 1, 5$  as a function of time. Facet by Gender and Country
-```{r, fig.width=8, fig.height=16}
+```{r fig.width=8, fig.height=16}
+
 ages <- c(0, 1, 5)
 
 mx_by_age <- life_table %>%
@@ -511,13 +536,14 @@ mx_by_age <- life_table %>%
 mx_by_age
 ```
 
-- [ ] Comment
 New borns die more than children of ages 1 and 5 for both genders and for all countries, and children of age 5 die the less.
 We don't notice any difference between the mortality quotients of the two genders, for all the countries.
 We can see some noticable peaks for the Netherlands corresponding to the two world wars, that don't appear on the US plot, for the 3 different ages.
 Also, for both the USA and our European country, the mortality quotients were obviously higher 100 years ago than what they are nowadays. 
 
-- [ ] Plot mortality quotients at ages $15, 20, 40, 60$  as a function of time. Facet by `Gender` and `Country`
+
+* **Visualization of mortality quotients at ages $15, 20, 40, 60$  as a function of time, facetted by `Gender` and `Country` :**
+
 ```{r, fig.width=8, fig.height=16}
 ages_2 <- c(15,20,40,60)
 
@@ -536,25 +562,20 @@ mx_by_age_2
 ```
 
 
-- [ ] Comment
 
 We observe that the mortality quotients for male are higher than for women for ages 15 to 60 for both countries.
 We can also see that the Netherlands peaks are still observable and they are even sharper, for the same years (WWI and WWII).
 Also, for both the USA and our European country, the mortality quotients were obviously higher 100 years ago than what they are nowadays. 
 
 
-- [ ] Comment
-
 # Rearrangement
 
-- [ ] From dataframe `life_table`, compute another dataframe  called `life_table_pivot`
+- From our dataframe `life_table`, we then compute another dataframe  called `life_table_pivot`
 with primary key `Country`, `Gender` and `Year`, with a column for each `Age` from `0` up to `110`.
 For each age column, the entry should be the central death rate
 at the age defined by column, for `Country`, `Gender`  and `Year` identifying the row.
 
-You may use functions `pivot_wider`, `pivot_longer` from `tidyr::` package.
-
-The resulting schema should look like:
+The resulting schema looks like:
 
 | Column Name | Type    |
 |:------------|:--------|
@@ -568,9 +589,9 @@ The resulting schema should look like:
 | $\vdots$    | $\vdots$|
 
 
-- [ ] Using `life_table_pivot` compute life expectancy at birth for each Country, Gender and Year
+- Using this new dataframe, we compute life expectancy at birth for each Country, Gender and Year :
 
-```{r}
+```{r results="hide"}
 life_table_pivot <- life_table %>%
   select(Country, Gender, Year, Age, mx) %>%
   tidyr::pivot_wider(names_from = "Age", values_from = "mx")
@@ -598,7 +619,11 @@ life_table_pivot
 
 # Life expectancy
 
-- [ ] Write a function that takes as input a vector of mortality quotients, as well as an age, and returns the residual life expectancy corresponding to the vector and the given age.
+- We then calculate the residual life expectancy corresponding to the vector of mortality quotients and a given age.
+
+\[
+ex = \sum_{} \prod_{} 1-mx
+\]
 
 
 ```{r}
@@ -606,16 +631,6 @@ ex <- function(mx){
   sum(cumprod(1 - mx))
 }
 ```
-
-
-- [ ] Write a function that takes as input
-a dataframe with the same schema as  `life_table` and returns
-a data frame with columns `Country`, `Gender`, `Year`, `Age` defining a primary key
-and a column `res_lex` containing _residual life expectancy_ corresponding to the pimary key.
-
-In order to compute residual life expectancies, you may consider using `window` functions
-oer apropriately defined windows. Package `dplyr` does not offer a rich API for window functions.
-Package `dbplyr` does.
 
 ```{r}
 conv_to_A <- function(data){
@@ -666,8 +681,7 @@ out_pivot_log <- purrr::map(out_pivot, log)
 ```
 
 
-- [ ] Plot residual life expectancy as a function of `Year` at ages $60$ and $65$,
-facet by `Gender` and `Country`.
+* **Visualization of residual life expectancy as a function of `Year` at ages $60$ and $65$, facetted by `Gender` and `Country` :**
 
 ```{r retirement, echo=FALSE, eval=FALSE}
 
@@ -701,9 +715,9 @@ re %>%
 
 # PCA  and SVD over log-mortality tables
 
-- [ ] Pick a Country, a Gender,  a range of years `1948:2010`.
-Extract the corresponding  lines from `life_table_pivot`. Take logarithms of
-central death rates and perform principal component analysis.
+- As we chose to study on the Netherlands as our European country, we also now pick a range of years `1948:2010`.
+Then we extract the corresponding  lines from `life_table_pivot`, with taking logarithms of
+central death rates. Once we did all that, we perform principal component analysis :
 
 
 ```{r}
@@ -726,22 +740,21 @@ plot_pca(out_pivot_log$data_f_nl, TRUE, TRUE)
 ```
 
 
-- [ ] comment the screeplot
-- [ ] comment the correlation circle
-- [ ] comment the biplot
++ Concerning the screeplot :
+
+Our scree plot displays how much variation each principal component captures from the data. Since our scree plot is a steep curve that bends quickly and flattens out, the first two PCs are sufficient to describe the essence of the data. So we can say that PCA works well on our data.
+
++ Concerning the correlation circle :
+
+We see on the correlation circle that the infant mortality is inversely correlated with life expectancy. Indeed, all the advanced ages are tending down whereas the younger ages are tending up, on the left side of the circle. And the mx arrow is going to the right side of the circle. But we have to consider the fact that the oldest ages reprensent a small percentage of the total population.
+
++ Concerning the biplot :
+
+We see that the recent years are more distributed on the right side of the biplot, which means that they follow the direction of mx on the correlation circle. So the PCA allows us to conclude that the life expectancy is getting higher as time goes by
 
 # Canonical Correlation Analysis
 
-- [ ] Build a function that takes as input
-  + a dataframe like `life_table_pivot`,
-  + a couple  of countries, say `Spain` and `Sweeden`,
-  + a vector of `Year`, say `1948:1998`
-  + a `Gender` say `Female`
-  returns a matrix called $Z$ with rows corresponding to `Year` and columns
-  corresponding to couples `(Country, Age)`.
-
-
-- [ ] Perform a Canonical Correspondance Analysis of $Z$
++ We perform a Canonical Correspondance Analysis of $Z$ :
 
 ```{r}
 
@@ -783,7 +796,7 @@ img.matcor(correl, type = 2)
 
 cca_2 <- cancor(nd,us)
 
-plot(cca_2)
+#plot(cca_2)
 
 #plt.cc(cca, var.label = TRUE, ind.names = data[,1])
 #p.cca <- vegan::cca(Z)
