@@ -391,6 +391,7 @@ And if we study again the same ratio but for the year 2015, we clearly see an in
 
 ```{r fig.width=8, fig.height=3}
 
+
 after_ww_II <- seq(1946,2016, by = 10)
 
 
@@ -409,14 +410,24 @@ p <- life_table %>%
 print(p)
 
 
+- [ ] Facet by `Gender`  and `Country`
+
+```{r}
+pacman::p_load(plotly)
+p %+%
+  facet_grid(vars(Gender),vars(Country)) +
+  ylab("Mortality quotients") 
 ```
-
-
 
 + Concerning the plot below:
 
+
+
+
+- Comment concerning the plot below:
 We notice that the mortality quotients of young people in 1946 is smaller in the USA than in all the European countries.
 This is certainly due to the fact that the USA didn't suffer a lot from human loss during the WWII, unlike the European countries.
+
 
 
 We modify our dataframe so it has the following schema:
@@ -455,6 +466,7 @@ ratio_mortality_rates(life_table)
 
 * **Visualization of the ratio  $m_{x,t}/m_{x, 1946}$ for ages $x \in 1, \ldots, 90$ and year $t$ for $t \in 1946, \ldots, 2016$ where $m_{x,t}$ is the central death rate at age $x$ during year  $t$ :**
 
+
 ```{r}
 q <- dplyr::filter(ratio_mortality_rates(data_b_nl), FALSE) %>%
   ggplot(aes(x=Age, y=mx.x/mx.y)) +
@@ -479,7 +491,7 @@ q <- dplyr::filter(ratio_mortality_rates(data_b_nl), FALSE) %>%
 
 
 + We handle both genders and countries `Spain`, `Italy`, `France`, `England & Wales`, `USA`, `Sweden`, `Netherlands`.
-  
+
 ```{r}
 (q  %+%
   ratio_mortality_rates(life_table) +
@@ -668,20 +680,14 @@ full_rex <- function(lt)
     }
   E
 }
-```
 
-
-```{r}
-out_pivot <- purrr::map(out, conv_to_A)
 out_rex <- purrr::map(out, full_rex)
-out_pivot_log <- purrr::map(out_pivot, log)
 
-#glimpse(out_pivot)
-#glimpse(out_rex)
 ```
 
 
 * **Visualization of residual life expectancy as a function of `Year` at ages $60$ and $65$, facetted by `Gender` and `Country` :**
+
 
 ```{r retirement, echo=FALSE, eval=FALSE}
 
@@ -722,21 +728,27 @@ central death rates. Once we did all that, we perform principal component analys
 
 ```{r}
 
-plot_pca<-function(data, sca, cen){
-  pca_data <- data
+
+plot_pca<-function(data, sca, cen, c, g){
+  pca_data <- data %>%
+    filter(Country == c, Gender == g) %>%
+    remove_rownames %>% 
+    column_to_rownames(var="Year") -> data
+  
   
   pca_data[unlist(lapply(1948:2010, as.character)),] ->pca_data
-  out_rex$data_b_nl[unlist(lapply(1948:2010, as.character)),1] -> rx
-  pca_data <- cbind(pca_data, rx)
+  filter(life_table_pivot, Country == c, Year %in% 1948:2010, Gender == g)$life_ex -> rx
+  pca_data <- cbind(pca_data, rx) %>%
+    select(-c(Country, Gender))
   res.pca = prcomp(pca_data, scale. = sca, center = cen)
   print(fviz_pca_ind(res.pca, repel = T))
   print(fviz_pca_var(res.pca,col.var = "contrib"))
   print(fviz_eig(res.pca))
 }
-plot_pca(out_pivot_log$data_f_nl, TRUE, TRUE)
-#plot_pca(out_pivot_log$data_f_nl, FALSE, TRUE)
-#plot_pca(out_pivot_log$data_f_nl, TRUE, FALSE)
-#plot_pca(out_pivot_log$data_f_nl, FALSE, FALSE)
+plot_pca(life_table_pivot_log, TRUE, TRUE, 'Netherlands', 'Both')
+#plot_pca(out_pivot_log$data_f_nl, FALSE, TRUE, 'Netherlands', 'Both')
+#plot_pca(out_pivot_log$data_f_nl, TRUE, FALSE, 'Netherlands', 'Both')
+#plot_pca(out_pivot_log$data_f_nl, FALSE, FALSE, 'Netherlands', 'Both')
 ```
 
 
@@ -752,9 +764,19 @@ We see on the correlation circle that the infant mortality is inversely correlat
 
 We see that the recent years are more distributed on the right side of the biplot, which means that they follow the direction of mx on the correlation circle. So the PCA allows us to conclude that the life expectancy is getting higher as time goes by
 
+
 # Canonical Correlation Analysis
 
-+ We perform a Canonical Correspondance Analysis of $Z$ :
+- [ ] Build a function that takes as input
+  + a dataframe like `life_table_pivot`,
+  + a couple  of countries, say `Spain` and `Sweeden`,
+  + a vector of `Year`, say `1948:1998`
+  + a `Gender` say `Female`
+  returns a matrix called $Z$ with rows corresponding to `Year` and columns
+  corresponding to couples `(Country, Age)`.
+
+
+- [ ] Perform a Canonical Correspondance Analysis of $Z$
 
 ```{r}
 
@@ -796,7 +818,7 @@ img.matcor(correl, type = 2)
 
 cca_2 <- cancor(nd,us)
 
-#plot(cca_2)
+plot(cca_2)
 
 #plt.cc(cca, var.label = TRUE, ind.names = data[,1])
 #p.cca <- vegan::cca(Z)
@@ -834,9 +856,13 @@ plot(mod)
 During the last century, in the USA and in western Europe,
 central death rates at all ages have exhibited a general decreasing trend.
 This decreasing trend has not always been homogeneous across ages.
+Governments and many stakeholders in the health and insurance sectors were intreseted in understanding these trends in order to more precisely model and predict the evolution of the mortality rate.  
+One of the biggest hurdles was to correctly predict the age specific trends and variations of mortality.
 
 The Lee-Carter model has been designed to model and forecast the
 evolution of the log-central death rates for the United States during the XXth century.
+
+The result is a matrix of age specific foracasted mortality rates.
 
 Let $A_{x,t}$ denote the log central death rate at age $x$ during year $t\in T$
 for a given population (defined by Gender and Country).
@@ -852,8 +878,15 @@ a_x = \frac{1}{|T|}\sum_{t \in T} A_{x,t}\qquad \sum_{t\in T} \kappa_t = 0 \qqua
 \]
 and $\epsilon_{x,t}$ are i.i.d Gaussian random variables.
 
-## US data
+To estimate our vectors we have used the SVD decomposition  \[M = UDV^T\]
 
+\[a_x\] and \[b_x = \frac{V_{x,1}}{\sum_{x} V_{.,1}} \] are the age dependent elements of our model and will be used for the rest of the modelisation.
+
+\[k_t = D_1* U_{1,x} * \sum_{x} V_{.,1} \] is the time (Year) dependent element of the Lee-carter model, each value of this vector corresponds to a year.
+
+The following graphs show that our Lee-Carter fit raging from 1933 to 1995 of US mortality data is acceptable and we can proceed with the prediction of our futur \[ k_t\] values.
+
+## US data
 - [ ] Fit a Lee-Carter model on the American data (for Male and Female data) training on years `1933` up to `1995`.
 ```{r}
 
@@ -876,7 +909,7 @@ Lee_carter_fit<- function(df, c, g, y_start, y_lc ,y_end){
   k_t <- t(sum(df.svd$v)*df.svd$d[1]*df.svd$u)
 
   drift_len = y_lc - y_start
-  drift =(k_t[length(k_t)]-k_t[drift_len])/drift_len
+  drift =(k_t[length(k_t)]-k_t[1])/length(k_t)
   for (i in 1:(y_end-y_lc)){
     eps  = rnorm(1, mean = drift, sd = sqrt(sd(k_t))/2)
     k_t <- cbind(k_t,k_t[length(k_t)] + eps)
@@ -933,10 +966,19 @@ years <- seq(1935,1995, by = 20)
 plot_mortality_lee_carter(life_table_pivot_log, 'USA', 'Male', 1933, 1995, 2040, years)
 
 ```
-- [ ] Compare the fit provided by the Lee-Carter model with the fit provided by a rank $2$
-truncated SVD
-- [ ] Compare vectors avec $(a_x)_x, (b_x)_x$ and $(\kappa_t)_t$ with appropriate singular vectors.
+
+
+
 - [ ] Use the Lee-Carter model to predict the central death rates for years $2000$ up to $2015$
+
+      
+For the prediction we have used a random walk as mentionned in the 1992 publication by Ronald Lee:
+
+\[k_{t} = k_{t-1} + d + \epsilon \] with d being the drift and epsilon a gaussian random variable with the same standard deviation as \[k_t\].
+the drift is the trickiest part to estimate, it has a massive impact on the trend of ou prediction, we setteled on \[d = \frac{k_T - k_1}{T}\] 
+which. We have used the same function as the one used for the fit and just concatenate the new \[k\] values to the fitted vector. the resulting matrix will have x lines corresponding to the fitted values and y lines for the predicted years.   
+
+
 - [ ] Plot predictions and observations for years $2000, 2005, 2010, 2015$
 ```{r}
 
@@ -954,12 +996,13 @@ plot_mortality_lee_carter(life_table_pivot_log, 'USA', 'Male', 1933, 1995, 2040,
 years <- seq(1935,1995, by = 20)
 plot_mortality_lee_carter(life_table_pivot_log, 'Netherlands', 'Male', 1933, 1995, 2040, years)
 ```
-
-
 - [ ] Comment
+The lee-Carter fit is very close to the observed values. Although it's smoother than the real mortality curve, it shouldn't impact our next prediction.
+
 - [ ] Compare with rank-2 truncated SVD
 - [ ] Use the Lee-Carter model to predict the central death rates for years $2000$ up to $2015$
       Plot predictions and observations for years $2000, 2005, 2010, 2015$
+
 ```{r}
 
 years <- seq(2000,2015, by = 5)
@@ -1024,40 +1067,42 @@ lee_carter_avg  <- function(df, c, g, y_start, y_lc ,y_end, nb){
     rowMeans() -> lc_le$Mean
   lc_le %>%
   select(-c(Year, Mean)) %>%
-  apply(1,quantile,probs = c(5,95)/100) -> quantiles
+  apply(1,quantile,probs = c(10,90)/100) -> quantiles
   
-  lc_le$quantile_95 <- quantiles[2,] 
-  lc_le$quantile_5 <- quantiles[1,] 
+  lc_le$quantile_90 <- quantiles[2,] 
+  lc_le$quantile_10 <- quantiles[1,] 
   lc_le$Country <- c
   #lc_le$Mean[1:y_start-y_lc+1] <- filter(life_table_pivot, Country == c , Year %in% y_start:y_lc, Gender == g)$life_ex
   lc_le %>% 
-    select(c(Year, Mean, quantile_5, quantile_95, Country)) %>%
+    select(c(Year, Mean, quantile_10, quantile_90, Country)) %>%
     filter(Year %in% y_lc:y_end)
 }
 
 
-y_start = 1933
-y_lc = 2015
+y_start = 1945
+y_lc = 1995
 y_end = 2050
 g = "Both"
-us_le_lc <- lee_carter_avg(life_table_pivot_log, 'USA', g,  y_start, y_lc ,y_end, 500)
+us_le_lc <- lee_carter_avg(life_table_pivot_log, 'USA', g,  y_start, y_lc ,y_end, 50)
 nl_le_lc <- lee_carter_avg(life_table_pivot_log, 'Netherlands', g,  y_start, y_lc ,y_end, 50)
 sw_le_lc <- lee_carter_avg(life_table_pivot_log, 'Sweden', g,  y_start, y_lc ,y_end, 50)
 
 
 life_table_pivot %>%
-  filter(Country %in% c("USA","Netherlands","Sweden") , Year %in% y_start:y_lc, Gender == g) %>%
-  select(c(Year, Country,life_ex)) -> real_lexp
+  filter(Country %in% c("USA","Netherlands") , Year %in% y_start:2015, Gender == g) %>%
+  select(c(Year, Country,life_ex)) %>%
+  pivot_longer(-c(Year,Country),names_to = "Percentile", values_to = "life_exp") -> real_lexp
 ```
 
 ``` {r}
 
-p <- rbind(us_le_lc, nl_le_lc, sw_le_lc) %>%
-  select(c(Year,Mean,quantile_5,quantile_95,Country )) %>%
+p <- rbind(us_le_lc, nl_le_lc) %>%
+  select(c(Year,Mean,quantile_10,quantile_90,Country )) %>%
   pivot_longer(-c(Year,Country),names_to = "Percentile", values_to = "life_exp") %>%
+  rbind(real_lexp) %>%
   ggplot() +
   geom_line(aes(x=Year, y=life_exp,linetype=forcats::as_factor(Percentile), colour = forcats::as_factor(Country)),method="loess", se=FALSE, span=.5, size = .2) +
-  geom_line(data=real_lexp, map=aes(x=Year, y=life_ex, colour = forcats::as_factor(Country)),method="loess", se=FALSE, span=.5, size = .2) +
+  #geom_line(data=real_lexp, map=aes(x=Year, y=life_ex, colour = forcats::as_factor(Country)),method="loess", se=FALSE, span=.5, size = .2) +
   scale_y_log10() +
   xlab("Year")+
   ylab("Life expectancy") +
