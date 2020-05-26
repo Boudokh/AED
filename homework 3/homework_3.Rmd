@@ -70,7 +70,9 @@ pacman::p_load(FactoInvestigate)
 pacman::p_load(ggfortify)
 pacman::p_load(plyr)
 pacman::p_load(viridis)
-
+pacman::p_load(CCA)
+pacman::p_load(vegan)
+pacman::p_load(corrplot)
 
 old_theme <-theme_set(theme_dark(base_size=9,
                                  base_family = "Helvetica"))
@@ -618,12 +620,17 @@ The resulting schema should look like:
 - [ ] Using `life_table_pivot` compute life expectancy at birth for each Country, Gender and Year
 
 ```{r}
-life_table_pivot <- data_b_nl %>%
+life_table_pivot <- full_data %>%
   select(Country, Gender, Year, Age, mx) %>%
-  dplyr::mutate(mx=log(mx)) %>%
   tidyr::pivot_wider(names_from = "Age", values_from = "mx")
 
 life_table_pivot
+
+
+life_table_pivot_log <- full_data %>%
+  select(Country, Gender, Year, Age, mx) %>%
+  dplyr::mutate(mx=log(mx)) %>%
+  tidyr::pivot_wider(names_from = "Age", values_from = "mx")
 ```
 
 
@@ -635,9 +642,15 @@ ex <- function(mx){
   sum(cumprod(1 - mx))
 }
 
-data_b_nl %>%
-  filter(Age==0) %>%
-  select(Country, Gender, Year, ex)
+life_table_pivot %>%
+    select(-c("Country","Gender","Year")) %>%
+    apply(1, ex) -> life_table_pivot$life_ex 
+life_table_pivot
+
+
+# data_b_nl %>%
+#   filter(Age==0) %>%
+#   select(Country, Gender, Year, ex)
 
 
 ```
@@ -761,14 +774,11 @@ plot_pca<-function(data, sca, cen){
   pca_data[unlist(lapply(1948:2010, as.character)),] ->pca_data
   out_rex$data_b_nl[unlist(lapply(1948:2010, as.character)),1] -> rx
   pca_data <- cbind(pca_data, rx)
-  res.pca = prcomp(pca_data, scale. = T, center = T)
+  res.pca = prcomp(pca_data, scale. = sca, center = cen)
   print(fviz_pca_ind(res.pca, repel = T))
   print(fviz_pca_var(res.pca,col.var = "contrib"))
   print(fviz_eig(res.pca))
-
 }
-
-
 plot_pca(out_pivot_log$data_f_nl, TRUE, TRUE)
 #plot_pca(out_pivot_log$data_f_nl, FALSE, TRUE)
 #plot_pca(out_pivot_log$data_f_nl, TRUE, FALSE)
@@ -794,7 +804,13 @@ fviz_eig(res.pca)
 
 
 - [ ] comment the screeplot
+
+Our scree plot displays how much variation each principal component captures from the data. Since our scree plot is a steep curve that bends quickly and flattens out, the first two PCs are sufficient to describe the essence of the data. So we can say that PCA works well on our data.
+
 - [ ] comment the correlation circle
+
+
+
 - [ ] comment the biplot
 
 # Canonical Correlation Analysis
@@ -811,13 +827,58 @@ fviz_eig(res.pca)
 - [ ] Perform a Canonical Correspondance Analysis of $Z$
 
 ```{r}
-  
+
+cnty <- c("USA", "Netherlands")
+life_table_pivot %>%
+  filter(Country %in% cnty, Year %in% 1948:1998, Gender == 'Female' ) %>%
+  select(-c("Gender","life_ex")) -> Z
+us <-Z %>%
+  filter(Country == "USA" ) %>%
+  select(-c("Country")) %>%
+  column_to_rownames(var="Year") %>%
+  as.matrix()
+nd <-Z %>%
+  filter(Country == "Netherlands" ) %>%
+  select(-c("Country")) %>%
+  column_to_rownames(var="Year") %>%
+  as.matrix()
+n = names(us)
+#names(us) <- c(n[1],paste(tail(n,length(n)-1) , "us", sep="-"))
+#names(nd) <- c(n[1],paste(tail(n,length(n)-1) , "nd", sep="-"))
+Z<-merge(nd,us)
+print(Z)
+#res.cc=cc(sp,nd)
+#plt.cc(res.cc)
+#cancor(sp, nd) -> cca
+correl <- matcor(us, nd )
+img.matcor(correl, type = 2)
+cca_2 <- cancor(nd,us)
+plot(cca_2)
+#plt.cc(cca, var.label = TRUE, ind.names = data[,1])
+#p.cca <- vegan::cca(Z)
+#plot(p.cca, type ='t')  
+
 ```
 
 - [ ] Perform a Canonical Correspondance Analysis of $Z$
 ```{r}
+data(Rohwer, package="heplots")
+X <- as.matrix(Rohwer[,6:10])  # the PA tests
+Y <- as.matrix(Rohwer[,3:5])  
+cc <- cancor(X, Y)
+plot(cc)
 
 ```
+
+```{r}
+data(dune)
+data(dune.env)
+print(dune.env)
+mod <- cca(dune ~ A1 + Moisture + Management, dune.env)
+plot(mod)
+
+```
+
 
 
 - [ ] Comment ...
@@ -849,15 +910,105 @@ and $\epsilon_{x,t}$ are i.i.d Gaussian random variables.
 ## US data
 
 - [ ] Fit a Lee-Carter model on the American data (for Male and Female data) training on years `1933` up to `1995`.
+
+```{r}
+
+Lee_carter_fit<- function(df, c, g, y_start, y_lc ,y_end){
+  df %>% 
+    filter(Country == c , Year %in% y_start:y_lc, Gender == g ) %>%
+    select(-c(Gender,Country, Year)) -> m
+  
+  ax <- m %>%
+    colMeans() %>% 
+    as.matrix() 
+  
+  m %>%
+    sweep(2, ax) %>%
+    svd(1,1) -> df.svd
+  
+  #bx <- as.matrix(df.svd$v/sqrt(sum(df.svd$v**2)))
+  bx <- as.matrix(df.svd$v/sum(df.svd$v))
+  k_t <- t(sum(df.svd$v)*df.svd$d[1]*df.svd$u)
+  drift_len = y_lc - y_start
+  drift =(k_t[length(k_t)]-k_t[drift_len])/drift_len
+  for (i in 1:(y_end-y_lc)){
+    eps  = rnorm(1, mean = drift, sd = sqrt(sd(k_t))/2)
+    k_t <- cbind(k_t,k_t[length(k_t)] + eps)
+  }
+  
+  lc <- sweep(bx %*% k_t, 1, ax, "+") %>%
+    t() %>%
+    as_tibble() 
+  
+  names(lc) <- 0:109
+  lc$Year <- y_start:y_end
+  lc
+  }
+
+```
+
+```{r}
+
+plot_mortality_lee_carter <- function(df, c, g, y_start, y_lc ,y_end, years){
+  
+  lt_lc <- Lee_carter_fit(df, c, g, y_start, y_lc ,y_end)
+  
+  lt_lc <-lt_lc %>%
+    pivot_longer(-Year,names_to = "Age", values_to = "mx_lc") %>%
+    mutate(mx_lc = exp(mx_lc), Age = as.numeric(Age)) %>%
+    filter(Year %in% years)
+  
+  real_lt <- full_data %>%
+    filter(Country == c , Year %in% years, Gender == g ) %>%
+    select(c(Year,Age,mx)) 
+  
+    
+  lt_merged <- merge(real_lt, lt_lc)
+  lt_merged <- lt_merged[order(lt_merged$Year, lt_merged$Age),]
+  lc_plot <- lt_merged %>%
+    select(c(Year,mx, mx_lc, Age)) %>%
+    pivot_longer(-c(Year,Age),names_to = "method", values_to = "mx_n") %>%        
+    ggplot(mapping=aes(x=Age, y=mx_n)) +
+    geom_line(method="loess", se=FALSE, span=.5,aes(colour = forcats::as_factor(method)), size = .2) +
+    scale_y_log10() +
+    xlab("Age")+
+    ylab("Mortality quotients") +
+    labs(colour = "Mx method") +
+    facet_wrap(~ Year) +
+    ggtitle("Lee carter fit comparaison") +
+    theme_bw() 
+  print(lc_plot)
+}
+years <- seq(1935,1995, by = 20)
+plot_mortality_lee_carter(life_table_pivot_log, 'USA', 'Male', 1933, 1995, 2040, years)
+
+```
+
+
 - [ ] Compare the fit provided by the Lee-Carter model with the fit provided by a rank $2$
 truncated SVD
 - [ ] Compare vectors avec $(a_x)_x, (b_x)_x$ and $(\kappa_t)_t$ with appropriate singular vectors.
 - [ ] Use the Lee-Carter model to predict the central death rates for years $2000$ up to $2015$
 - [ ] Plot predictions and observations for years $2000, 2005, 2010, 2015$
 
+```{r}
+
+years <- seq(2000,2015, by = 5)
+plot_mortality_lee_carter(life_table_pivot_log, 'USA', 'Male', 1933, 1995, 2040, years)
+
+```
+
+
 ## Application of Lee-Carter model to a European Country
 
 - [ ] Fit a Lee-Carter model to a European country
+
+```{r}
+years <- seq(1935,1995, by = 20)
+plot_mortality_lee_carter(life_table_pivot_log, 'Netherlands', 'Male', 1933, 1995, 2040, years)
+
+```
+
 - [ ] Comment
 - [ ] Compare with rank-2 truncated SVD
 - [ ] Use the Lee-Carter model to predict the central death rates for years $2000$ up to $2015$
@@ -866,6 +1017,93 @@ truncated SVD
 ## Predictions of life expectancies at different ages
 
 - [ ] Use Lee-Carter approximation to approximate residual life expectations
+
+
+```{r}
+
+get_lee_carter_life_exp <- function(df, c, g, y_start, y_lc ,y_end){
+  
+  new_lt <- Lee_carter_fit(df, c, g, y_start, y_lc ,y_end)
+    
+  new_lt <-new_lt %>%
+    pivot_longer(-Year,names_to = "Age", values_to = "mx_lc") %>%
+    mutate(mx_lc = exp(mx_lc), Age = as.numeric(Age))
+  
+  new_lt_pivot <- new_lt %>%
+    select(Year, Age, mx_lc) %>%
+    tidyr::pivot_wider(names_from = "Age", values_from = "mx_lc")
+  
+  new_lt_pivot %>%
+      select(-Year) %>%
+      apply(1, ex) -> new_lt_pivot$life_ex 
+  
+  select(new_lt_pivot, c(Year, life_ex))
+}
+lt_lc_us <- get_lee_carter_life_exp(life_table_pivot_log, 'USA', 'Female', 1933, 1995, 2040)
+p <- lt_lc_us %>%
+  ggplot(mapping=aes(x=Year, y=life_ex)) +
+  geom_line(method="loess", se=FALSE, span=.5, size = .2) +
+  scale_y_log10() +
+  xlab("Year")+
+  ylab("Life expectancy") +
+  ggtitle("Lee carter fit comparaison") +
+  theme_bw()
+print(p)
+```
+
+```{r}
+lee_carter_avg  <- function(df, c, g, y_start, y_lc ,y_end, nb){
+  
+  lc_le <- data.frame(Year = y_start:y_end )
+  for (i in 1:nb){
+    #tmp <- get_lee_carter_life_exp(df, c, g, y_start, y_lc ,y_end)
+    lc_le[i+1] <- get_lee_carter_life_exp(df, c, g, y_start, y_lc ,y_end)['life_ex']
+  }
+  lc_le %>%
+    select(-Year) %>%
+    rowMeans() -> lc_le$Mean
+  lc_le %>%
+  select(-c(Year, Mean)) %>%
+  apply(1,quantile,probs = c(5,95)/100) -> quantiles
+  
+  lc_le$quantile_95 <- quantiles[2,] 
+  lc_le$quantile_5 <- quantiles[1,] 
+  lc_le$Country <- c
+  #lc_le$Mean[1:y_start-y_lc+1] <- filter(life_table_pivot, Country == c , Year %in% y_start:y_lc, Gender == g)$life_ex
+  lc_le %>% 
+    select(c(Year, Mean, quantile_5, quantile_95, Country)) %>%
+    filter(Year %in% y_lc:y_end)
+}
+y_start = 1933
+y_lc = 2015
+y_end = 2050
+g = "Both"
+us_le_lc <- lee_carter_avg(life_table_pivot_log, 'USA', g,  y_start, y_lc ,y_end, 500)
+nl_le_lc <- lee_carter_avg(life_table_pivot_log, 'Netherlands', g,  y_start, y_lc ,y_end, 50)
+sw_le_lc <- lee_carter_avg(life_table_pivot_log, 'Sweden', g,  y_start, y_lc ,y_end, 50)
+life_table_pivot %>%
+  filter(Country %in% c("USA","Netherlands","Sweden") , Year %in% y_start:y_lc, Gender == g) %>%
+  select(c(Year, Country,life_ex)) -> real_lexp
+
+```
+
+```{r}
+p <- rbind(us_le_lc, nl_le_lc, sw_le_lc) %>%
+  select(c(Year,Mean,quantile_5,quantile_95,Country )) %>%
+  pivot_longer(-c(Year,Country),names_to = "Percentile", values_to = "life_exp") %>%
+  ggplot() +
+  geom_line(aes(x=Year, y=life_exp,linetype=forcats::as_factor(Percentile), colour = forcats::as_factor(Country)),method="loess", se=FALSE, span=.5, size = .2) +
+  geom_line(data=real_lexp, map=aes(x=Year, y=life_ex, colour = forcats::as_factor(Country)),method="loess", se=FALSE, span=.5, size = .2) +
+  scale_y_log10() +
+  xlab("Year")+
+  ylab("Life expectancy") +
+  labs(colour = "Mx method") +
+  ggtitle("Lee carter fit comparaison") +
+  theme_bw()
+print(p)
+```
+
+
 - [ ] Compare with observed residual life expectations
 
 # References

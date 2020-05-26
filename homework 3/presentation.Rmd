@@ -1,6 +1,7 @@
 ---
 title: 'Homework II: SVD analysis & Life Tables'
 author: "Inès Dardouri, Mohamed Boudokhane and Lycia Fezzoua"
+#subtitle: 'Université de Paris'
 date: "`r Sys.Date()`"
 output: 
   xaringan::moon_reader:
